@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Costa Rica Collection · Plataformas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: slideDown 0.8s ease;
+        }
+
+        h1 {
+            color: white;
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            font-weight: 300;
+        }
+
+        /* Grid de Apps */
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .app-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .app-card:nth-child(1) { animation-delay: 0.1s; }
+        .app-card:nth-child(2) { animation-delay: 0.2s; }
+        .app-card:nth-child(3) { animation-delay: 0.3s; }
+        .app-card:nth-child(4) { animation-delay: 0.4s; }
+        .app-card:nth-child(5) { animation-delay: 0.5s; }
+        .app-card:nth-child(6) { animation-delay: 0.6s; }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .app-card:hover::before {
+            left: 100%;
+        }
+
+        .app-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .emoji {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .app-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .app-card p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .btn-app {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .btn-app:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Animaciones */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+
+            .apps-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .app-card {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>The Costa Rica Collection</h1>
+            <p class="subtitle">Portal de plataformas internas</p>
+        </header>
+
+        <!-- Grid de Apps -->
+        <div class="apps-grid">
+            <!-- APP 1: TICKETS -->
+            <div class="app-card">
+                <span class="emoji">🛎️</span>
+                <h3>Tickets</h3>
+                <p>Sistema de gestión y seguimiento de incidencias del hotel para resolver reportes con rapidez.</p>
+                <a href="https://tickets.thecostaricacollection.com/" target="_blank" class="btn-app">Abrir App</a>
+            </div>
+
+            <!-- APP 2: VOUCHERS -->
+            <div class="app-card">
+                <span class="emoji">🎁</span>
+                <h3>Vouchers</h3>
+                <p>Plataforma para crear y administrar vouchers.</p>
+                <a href="https://vouchers.thecostaricacollection.com/" target="_blank" class="btn-app">Abrir App</a>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- AGREGA TUS NUEVOS APPS AQUÍ ABAJO ↓↓↓ -->
+            <!-- ============================================ -->
+            <!-- Copia y pega este bloque para cada nuevo app:
+            
+            <div class="app-card">
+                <span class="emoji">EMOJI_AQUI</span>
+                <h3>Nombre de tu App</h3>
+                <p>Descripción breve de qué hace tu aplicación.</p>
+                <a href="https://tu-enlace.com" target="_blank" class="btn-app">Abrir App</a>
+            </div>
+            
+            ============================================ -->
+
+            <!-- EJEMPLO: Tu próximo app -->
+            <!-- <div class="app-card">
+                <span class="emoji">📊</span>
+                <h3>Analytics</h3>
+                <p>Análisis y reportes de tu negocio.</p>
+                <a href="https://analytics.thecostaricacollection.com/" target="_blank" class="btn-app">Abrir App</a>
+            </div> -->
+
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>The Costa Rica Collection · Uso interno</p>
+        </footer>
+    </div>
+</body>
+</html>

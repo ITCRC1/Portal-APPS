@@ -1,0 +1,11 @@
+{
+  "name": "mis-apps",
+  "version": "1.0.0",
+  "description": "Página con links de mis apps",
+  "scripts": {
+    "start": "serve -s . -l $PORT"
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}
