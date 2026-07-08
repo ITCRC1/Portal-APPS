@@ -1,11 +1,14 @@
 {
-  "name": "mis-apps",
-  "version": "1.0.0",
-  "description": "Página con links de mis apps",
-  "scripts": {
-    "start": "serve -s . -l $PORT"
+  "devDependencies": {
+    "prisma": "^7.8.0"
   },
   "dependencies": {
-    "serve": "^14.2.1"
-  }
+    "@prisma/client": "^7.8.0"
+  },
+"scripts": {
+  "dev": "next dev",
+  "build": "prisma generate && prisma migrate deploy && next build",
+  "start": "next start -p ${PORT:-3000}",
+  "lint": "next lint"
+  } 
 }
