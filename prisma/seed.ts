@@ -29,6 +29,40 @@ async function main() {
   })
 
   console.log('Usuario creado:', user.email)
+
+  const links = [
+    {
+      name: 'Tickets',
+      url: 'https://tickets.thecostaricacollection.com/',
+      description: 'Sistema de gestión y seguimiento de incidencias del hotel.',
+      icon: '🛎️',
+      order: 1,
+    },
+    {
+      name: 'Vouchers',
+      url: 'https://vouchers.thecostaricacollection.com/',
+      description: 'Gestión y pago de tours y experiencias de los huéspedes.',
+      icon: '🗺️',
+      order: 2,
+    },
+  ]
+
+  for (const link of links) {
+    const existing = await prisma.systemLink.findFirst({
+      where: { url: link.url },
+    })
+
+    if (existing) {
+      await prisma.systemLink.update({
+        where: { id: existing.id },
+        data: link,
+      })
+    } else {
+      await prisma.systemLink.create({ data: link })
+    }
+  }
+
+  console.log('System links creados/verificados:', links.map((l) => l.name).join(', '))
 }
 
 main()

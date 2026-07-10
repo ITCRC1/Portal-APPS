@@ -81,6 +81,7 @@ model Department {
   updatedAt   DateTime @updatedAt
 
   users User[]
+  systemLinks SystemLink[]
 }
 
 model User {
@@ -100,4 +101,19 @@ model User {
 
   accounts Account[]
   sessions Session[]
+}
+
+model SystemLink {
+  id           String      @id @default(cuid())
+  name         String
+  url          String
+  description  String?
+  icon         String?
+  isActive     Boolean     @default(true)
+  order        Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
 }
