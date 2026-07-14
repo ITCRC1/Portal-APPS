@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
+import type { Role } from "@prisma/client"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { TopBar } from "@/components/layout/TopBar"
 
@@ -14,9 +15,11 @@ export default async function ProtectedLayout({
     redirect("/login")
   }
 
+  const role = session.user.role as Role
+
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
-      <Sidebar />
+      <Sidebar role={role} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <TopBar user={session.user} />
         <main

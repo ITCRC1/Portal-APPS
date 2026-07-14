@@ -1,4 +1,4 @@
-import { auth } from "@/auth"
+import { requireModuleAccess } from "@/lib/require-module-access"
 
 const kpis = [
   { title: "Ingresos MTD", value: "$578K" },
@@ -12,7 +12,7 @@ const kpis = [
 ]
 
 export default async function DashboardPage() {
-  const session = await auth()
+  const session = await requireModuleAccess("dashboard")
 
   return (
     <div>

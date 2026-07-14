@@ -1,6 +1,8 @@
 "use client"
 
 import { signOut } from "next-auth/react"
+import type { Role } from "@prisma/client"
+import { ROLE_LABELS } from "@/lib/permissions"
 
 type Props = {
   user?: {
@@ -37,7 +39,9 @@ export function TopBar({ user }: Props) {
           <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--crc-brown-dark)" }}>
             {user?.name}
           </div>
-          <div style={{ fontSize: "0.75rem", color: "#888" }}>{user?.role}</div>
+          <div style={{ fontSize: "0.75rem", color: "#888" }}>
+            {user?.role ? ROLE_LABELS[user.role as Role] : ""}
+          </div>
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}

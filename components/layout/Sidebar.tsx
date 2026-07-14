@@ -3,19 +3,17 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
+import type { Role } from "@prisma/client"
+import { MODULES, getAccessibleModules } from "@/lib/permissions"
 
-const links = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/departments", label: "Departamentos" },
-  { href: "/documents", label: "Documentos" },
-  { href: "/system-links", label: "Enlaces del Sistema" },
-  { href: "/alerts", label: "Alertas" },
-  { href: "/tasks", label: "Tareas" },
-  { href: "/admin", label: "Administración" },
-]
+type Props = {
+  role: Role
+}
 
-export function Sidebar() {
+export function Sidebar({ role }: Props) {
   const pathname = usePathname()
+  const accessible = getAccessibleModules(role)
+  const links = MODULES.filter((m) => accessible.includes(m.key))
 
   return (
     <aside

@@ -1,4 +1,8 @@
-export default function Page() {
+import { requireModuleAccess } from "@/lib/require-module-access"
+
+export default async function Page() {
+  await requireModuleAccess("tasks")
+
   return (
     <div>
       <h1 style={{ color: "var(--crc-brown-dark)", fontSize: "1.5rem", marginBottom: "0.5rem" }}>

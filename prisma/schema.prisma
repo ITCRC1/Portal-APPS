@@ -117,3 +117,14 @@ model SystemLink {
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
 }
+
+// Ticket de solicitud de cambio de contraseña: el usuario pide, el admin lo resuelve
+// manualmente desde /admin/users (no hay flujo de auto-reset por correo/token).
+model PasswordChangeRequest {
+  id         String    @id @default(cuid())
+  email      String
+  message    String?
+  status     String    @default("pending") // pending | resolved
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+}

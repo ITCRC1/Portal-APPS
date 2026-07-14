@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma"
-import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react"
+import { requireModuleAccess } from "@/lib/require-module-access"
 
 export default async function SystemLinksPage() {
+  await requireModuleAccess("system-links")
+
   const links = await prisma.systemLink.findMany({
     where: { isActive: true },
     orderBy: { order: "asc" },
@@ -27,7 +29,7 @@ export default async function SystemLinksPage() {
             gap: "1rem",
           }}
         >
-          {links.map((link: { id: Key | null | undefined; url: string | undefined; icon: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; name: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; description: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined }) => (
+          {links.map((link) => (
             <a
               key={link.id}
               href={link.url}
