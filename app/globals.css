@@ -1,12 +1,19 @@
 @import "tailwindcss";
 
 :root {
-   --crc-brown-dark: #3E2B23;
+  /* El portal usa una paleta clara fija (arena/café); no sigue el tema del sistema.
+     color-scheme: light evita que el navegador pinte inputs y scrollbars en oscuro. */
+  color-scheme: light;
+
+  --crc-brown-dark: #3E2B23;
   --crc-brown: #6B4E3D;
   --crc-green: #4A5D3A;
   --crc-sand: #F0E6D8;
   --crc-gold: #C9A25D;
   --crc-white: #FFFFFF;
+
+  --background: var(--crc-white);
+  --foreground: var(--crc-brown-dark);
 }
 
 @theme inline {
@@ -14,13 +21,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
