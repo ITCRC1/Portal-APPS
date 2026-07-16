@@ -3,17 +3,90 @@ import argon2 from 'argon2'
 
 const prisma = new PrismaClient()
 
+// Los 9 departamentos del PRD (sección 7). El slug es la URL: /departments/<slug>.
+const departments = [
+  {
+    name: 'Executive Office',
+    slug: 'executive-office',
+    description: 'Visión corporativa, desempeño de la compañía e iniciativas estratégicas.',
+    icon: '🏛️',
+    order: 1,
+  },
+  {
+    name: 'Finance',
+    slug: 'finance',
+    description: 'Reportería financiera, cierres, control de caja, presupuesto y forecast.',
+    icon: '💰',
+    order: 2,
+  },
+  {
+    name: 'Operations',
+    slug: 'operations',
+    description: 'Operación hotelera, experiencia del huésped, logística y ejecución diaria.',
+    icon: '🛎️',
+    order: 3,
+  },
+  {
+    name: 'Sales & Marketing',
+    slug: 'sales-marketing',
+    description: 'Estrategia comercial, campañas, canales y generación de demanda.',
+    icon: '📈',
+    order: 4,
+  },
+  {
+    name: 'Human Resources',
+    slug: 'human-resources',
+    description: 'Personal, contratos, onboarding, planilla y capacitación.',
+    icon: '👥',
+    order: 5,
+  },
+  {
+    name: 'Procurement',
+    slug: 'procurement',
+    description: 'Solicitudes y órdenes de compra, proveedores, inventario y control de costos.',
+    icon: '📦',
+    order: 6,
+  },
+  {
+    name: 'Maintenance / CAPEX',
+    slug: 'maintenance-capex',
+    description: 'Mantenimiento preventivo, órdenes de trabajo, proyectos CAPEX y activos.',
+    icon: '🔧',
+    order: 7,
+  },
+  {
+    name: 'Legal / Administration',
+    slug: 'legal-admin',
+    description: 'Contratos, pólizas, permisos, documentos corporativos y plazos legales.',
+    icon: '⚖️',
+    order: 8,
+  },
+  {
+    name: 'IT / Systems',
+    slug: 'it-systems',
+    description: 'Accesos, integraciones, documentación técnica y soporte interno.',
+    icon: '💻',
+    order: 9,
+  },
+]
+
 async function main() {
   const passwordHash = await argon2.hash('CambiarEsteClave123!')
 
-  const department = await prisma.department.upsert({
+  // update deja intactos los datos que el admin haya editado desde el panel,
+  // salvo la descripción/ícono base que sí conviene mantener alineados al PRD.
+  for (const d of departments) {
+    await prisma.department.upsert({
+      where: { slug: d.slug },
+      update: { name: d.name, description: d.description, icon: d.icon, order: d.order },
+      create: d,
+    })
+  }
+
+  console.log('Departamentos creados/verificados:', departments.length)
+
+  const executiveOffice = await prisma.department.findUniqueOrThrow({
     where: { slug: 'executive-office' },
-    update: {},
-    create: {
-      name: 'Executive Office',
-      slug: 'executive-office',
-      description: 'Oficina ejecutiva',
-    },
   })
 
   const user = await prisma.user.upsert({
@@ -24,7 +97,7 @@ async function main() {
       email: 'it@thecostaricacollection.com',
       passwordHash,
       role: 'SUPER_ADMIN',
-      departmentId: department.id,
+      departmentId: executiveOffice.id,
     },
   })
 

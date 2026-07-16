@@ -61,3 +61,39 @@ export function getAccessibleModules(role: Role): ModuleKey[] {
 export function canAccessModule(role: Role, moduleKey: ModuleKey): boolean {
   return getAccessibleModules(role).includes(moduleKey)
 }
+
+// ---------- Alcance por departamento (PRD 13) ----------
+
+// Roles con visión corporativa: ven el contenido de todos los departamentos.
+export function canViewAllDepartments(role: Role): boolean {
+  return role === "SUPER_ADMIN" || role === "EXECUTIVE"
+}
+
+/**
+ * Alcance departamental del usuario, usado para filtrar dentro de la consulta
+ * misma (PRD 13), de modo que nadie reciba filas fuera de su ámbito.
+ *
+ * Los tres casos son explícitos a propósito: un solo `null` para "ve todo" y
+ * "no tiene departamento" haría que omitir el filtro le mostrara todo a quien
+ * no debe ver nada.
+ */
+export type DepartmentScope =
+  | { kind: "all" }
+  | { kind: "department"; departmentId: string }
+  | { kind: "none" }
+
+export function departmentScope(role: Role, userDepartmentId: string | null): DepartmentScope {
+  if (canViewAllDepartments(role)) return { kind: "all" }
+  if (userDepartmentId) return { kind: "department", departmentId: userDepartmentId }
+  return { kind: "none" }
+}
+
+// Un usuario sin departamento asignado (y sin visión corporativa) no tiene contenido departamental.
+export function canAccessDepartment(
+  role: Role,
+  userDepartmentId: string | null,
+  targetDepartmentId: string
+): boolean {
+  if (canViewAllDepartments(role)) return true
+  return userDepartmentId === targetDepartmentId
+}

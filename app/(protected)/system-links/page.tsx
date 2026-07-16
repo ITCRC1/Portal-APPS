@@ -1,11 +1,24 @@
+import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
+import { departmentScope } from "@/lib/permissions"
 
 export default async function SystemLinksPage() {
-  await requireModuleAccess("system-links")
+  const session = await requireModuleAccess("system-links")
+  const role = session.user.role as Role
+  const scope = departmentScope(role, session.user.departmentId)
+
+  // Los enlaces sin departamento son generales y los ve cualquiera; los de un
+  // departamento, solo quien pertenece a él.
+  const scopeFilter =
+    scope.kind === "all"
+      ? {}
+      : scope.kind === "department"
+        ? { OR: [{ departmentId: null }, { departmentId: scope.departmentId }] }
+        : { departmentId: null }
 
   const links = await prisma.systemLink.findMany({
-    where: { isActive: true },
+    where: { isActive: true, ...scopeFilter },
     orderBy: { order: "asc" },
     include: { department: true },
   })
