@@ -2,7 +2,7 @@ import type { CSSProperties } from "react"
 import { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { ROLE_LABELS } from "@/lib/permissions"
-import { createUser, updateUser, resetPassword, toggleUserActive } from "@/lib/actions/users"
+import { createUser, updateUser, toggleUserActive } from "@/lib/actions/users"
 import { resolvePasswordChangeRequest } from "@/lib/actions/password-requests"
 
 const DEFAULT_PASSWORD = "12345678"
@@ -215,7 +215,8 @@ export default async function AdminPage() {
           Usuarios existentes ({users.length})
         </h2>
         <p style={{ color: "#777", fontSize: "0.85rem", marginBottom: "1rem" }}>
-          Edita el nombre, correo, rol o departamento y pulsa Guardar en esa fila.
+          Edita lo que necesites y pulsa Guardar en esa fila. La contraseña solo cambia si escribes
+          una nueva; si dejas el campo vacío, se conserva la actual.
         </p>
 
         {/* table-layout: fixed + anchos en % => la tabla siempre cabe, sin scroll horizontal. */}
@@ -226,8 +227,8 @@ export default async function AdminPage() {
             <col style={{ width: "14%" }} />
             <col style={{ width: "14%" }} />
             <col style={{ width: "7%" }} />
-            <col style={{ width: "8%" }} />
-            <col style={{ width: "13%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "9%" }} />
             <col style={{ width: "11%" }} />
           </colgroup>
           <thead>
@@ -237,8 +238,8 @@ export default async function AdminPage() {
               <th style={thStyle}>Rol</th>
               <th style={thStyle}>Departamento</th>
               <th style={thStyle}>Estado</th>
-              <th style={thStyle}></th>
               <th style={thStyle}>Nueva clave</th>
+              <th style={thStyle}></th>
               <th style={thStyle}></th>
             </tr>
           </thead>
@@ -316,28 +317,20 @@ export default async function AdminPage() {
                     </span>
                   </td>
                   <td style={tdStyle}>
+                    <input
+                      form={editFormId}
+                      type="text"
+                      name="password"
+                      placeholder="Sin cambios"
+                      title="Escribe una clave nueva solo si quieres cambiarla"
+                      style={cellInputStyle}
+                    />
+                  </td>
+                  <td style={tdStyle}>
                     <form id={editFormId} action={updateUser}>
                       <input type="hidden" name="userId" value={u.id} />
                       <button type="submit" style={primaryButtonStyle}>
                         Guardar
-                      </button>
-                    </form>
-                  </td>
-                  <td style={tdStyle}>
-                    <form
-                      action={resetPassword}
-                      style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}
-                    >
-                      <input type="hidden" name="userId" value={u.id} />
-                      <input
-                        type="text"
-                        name="password"
-                        placeholder="Clave"
-                        required
-                        style={cellInputStyle}
-                      />
-                      <button type="submit" title="Actualizar contraseña" style={outlineButtonStyle}>
-                        OK
                       </button>
                     </form>
                   </td>

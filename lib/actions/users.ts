@@ -59,6 +59,7 @@ export async function updateUser(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase()
   const roleValue = String(formData.get("role") ?? "")
   const departmentId = String(formData.get("departmentId") ?? "") || null
+  const password = String(formData.get("password") ?? "")
 
   if (!userId) {
     throw new Error("Falta el usuario")
@@ -84,27 +85,9 @@ export async function updateUser(formData: FormData) {
       email,
       role: roleValue as Role,
       departmentId,
+      // Campo de clave vacío = se conserva la contraseña actual.
+      ...(password ? { passwordHash: await argon2.hash(password) } : {}),
     },
-  })
-
-  revalidatePath("/admin")
-}
-
-export async function resetPassword(formData: FormData) {
-  await requireSuperAdmin()
-
-  const userId = String(formData.get("userId") ?? "")
-  const password = String(formData.get("password") ?? "")
-
-  if (!userId || !password) {
-    throw new Error("Falta el usuario o la contraseña nueva")
-  }
-
-  const passwordHash = await argon2.hash(password)
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { passwordHash },
   })
 
   revalidatePath("/admin")
