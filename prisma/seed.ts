@@ -45,6 +45,13 @@ async function main() {
       icon: '🗺️',
       order: 2,
     },
+    {
+      name: 'Manual de Operaciones',
+      url: 'https://ops.thecostaricacollection.com/',
+      description: 'Manuales y procedimientos operativos de CRC.',
+      icon: '📖',
+      order: 3,
+    },
   ]
 
   for (const link of links) {
