@@ -117,7 +117,13 @@ export default async function AdminPage() {
             <input
               name="fullName"
               required
-              style={{ padding: "0.55rem 0.65rem", borderRadius: 6, border: "1px solid var(--crc-brown)" }}
+              style={{
+                padding: "0.55rem 0.65rem",
+                borderRadius: 6,
+                border: "1px solid var(--crc-brown)",
+                backgroundColor: "var(--crc-white)",
+                color: "var(--crc-brown-dark)",
+              }}
             />
           </label>
 
@@ -127,7 +133,13 @@ export default async function AdminPage() {
               type="email"
               name="email"
               required
-              style={{ padding: "0.55rem 0.65rem", borderRadius: 6, border: "1px solid var(--crc-brown)" }}
+              style={{
+                padding: "0.55rem 0.65rem",
+                borderRadius: 6,
+                border: "1px solid var(--crc-brown)",
+                backgroundColor: "var(--crc-white)",
+                color: "var(--crc-brown-dark)",
+              }}
             />
           </label>
 
@@ -136,7 +148,13 @@ export default async function AdminPage() {
             <select
               name="role"
               defaultValue={Role.READ_ONLY_USER}
-              style={{ padding: "0.55rem 0.65rem", borderRadius: 6, border: "1px solid var(--crc-brown)" }}
+              style={{
+                padding: "0.55rem 0.65rem",
+                borderRadius: 6,
+                border: "1px solid var(--crc-brown)",
+                backgroundColor: "var(--crc-white)",
+                color: "var(--crc-brown-dark)",
+              }}
             >
               {Object.values(Role).map((r) => (
                 <option key={r} value={r}>
@@ -151,7 +169,13 @@ export default async function AdminPage() {
             <select
               name="departmentId"
               defaultValue=""
-              style={{ padding: "0.55rem 0.65rem", borderRadius: 6, border: "1px solid var(--crc-brown)" }}
+              style={{
+                padding: "0.55rem 0.65rem",
+                borderRadius: 6,
+                border: "1px solid var(--crc-brown)",
+                backgroundColor: "var(--crc-white)",
+                color: "var(--crc-brown-dark)",
+              }}
             >
               <option value="">Sin departamento</option>
               {departments.map((d) => (
@@ -169,7 +193,13 @@ export default async function AdminPage() {
               name="password"
               defaultValue={DEFAULT_PASSWORD}
               required
-              style={{ padding: "0.55rem 0.65rem", borderRadius: 6, border: "1px solid var(--crc-brown)" }}
+              style={{
+                padding: "0.55rem 0.65rem",
+                borderRadius: 6,
+                border: "1px solid var(--crc-brown)",
+                backgroundColor: "var(--crc-white)",
+                color: "var(--crc-brown-dark)",
+              }}
             />
           </label>
 
@@ -246,7 +276,14 @@ export default async function AdminPage() {
                       name="password"
                       placeholder="Nueva clave"
                       required
-                      style={{ padding: "0.4rem 0.5rem", borderRadius: 6, border: "1px solid var(--crc-brown)", width: 130 }}
+                      style={{
+                        padding: "0.4rem 0.5rem",
+                        borderRadius: 6,
+                        border: "1px solid var(--crc-brown)",
+                        backgroundColor: "var(--crc-white)",
+                        color: "var(--crc-brown-dark)",
+                        width: 130,
+                      }}
                     />
                     <button
                       type="submit"
