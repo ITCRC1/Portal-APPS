@@ -1,10 +1,69 @@
+import type { CSSProperties } from "react"
 import { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { ROLE_LABELS } from "@/lib/permissions"
-import { createUser, resetPassword, toggleUserActive } from "@/lib/actions/users"
+import { createUser, updateUser, resetPassword, toggleUserActive } from "@/lib/actions/users"
 import { resolvePasswordChangeRequest } from "@/lib/actions/password-requests"
 
 const DEFAULT_PASSWORD = "12345678"
+
+const cardStyle: CSSProperties = {
+  backgroundColor: "var(--crc-white)",
+  borderRadius: 10,
+  padding: "1.5rem",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+}
+
+const labelStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.35rem",
+  fontSize: "0.85rem",
+  color: "var(--crc-brown)",
+}
+
+const inputStyle: CSSProperties = {
+  padding: "0.55rem 0.65rem",
+  borderRadius: 6,
+  border: "1px solid var(--crc-brown)",
+  backgroundColor: "var(--crc-white)",
+  color: "var(--crc-brown-dark)",
+}
+
+const cellInputStyle: CSSProperties = {
+  padding: "0.4rem 0.5rem",
+  borderRadius: 6,
+  border: "1px solid var(--crc-brown)",
+  backgroundColor: "var(--crc-white)",
+  color: "var(--crc-brown-dark)",
+  fontSize: "0.85rem",
+  width: "100%",
+}
+
+const outlineButtonStyle: CSSProperties = {
+  padding: "0.4rem 0.65rem",
+  borderRadius: 6,
+  border: "1px solid var(--crc-brown)",
+  backgroundColor: "transparent",
+  color: "var(--crc-brown-dark)",
+  cursor: "pointer",
+  fontSize: "0.8rem",
+  whiteSpace: "nowrap",
+}
+
+const primaryButtonStyle: CSSProperties = {
+  padding: "0.4rem 0.75rem",
+  borderRadius: 6,
+  border: "none",
+  backgroundColor: "var(--crc-green)",
+  color: "var(--crc-white)",
+  fontWeight: 600,
+  cursor: "pointer",
+  fontSize: "0.8rem",
+  whiteSpace: "nowrap",
+}
+
+const thStyle: CSSProperties = { padding: "0.5rem", whiteSpace: "nowrap" }
 
 export default async function AdminPage() {
   const [users, departments, pendingRequests] = await Promise.all([
@@ -31,15 +90,7 @@ export default async function AdminPage() {
       </div>
 
       {pendingRequests.length > 0 && (
-        <section
-          style={{
-            backgroundColor: "var(--crc-white)",
-            borderRadius: 10,
-            padding: "1.5rem",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            borderLeft: "4px solid var(--crc-gold)",
-          }}
-        >
+        <section style={{ ...cardStyle, borderLeft: "4px solid var(--crc-gold)" }}>
           <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
             Solicitudes de cambio de contraseña ({pendingRequests.length})
           </h2>
@@ -61,28 +112,14 @@ export default async function AdminPage() {
                   <div style={{ fontWeight: 600, color: "var(--crc-brown-dark)", fontSize: "0.9rem" }}>
                     {r.email}
                   </div>
-                  {r.message && (
-                    <div style={{ fontSize: "0.8rem", color: "#777" }}>{r.message}</div>
-                  )}
+                  {r.message && <div style={{ fontSize: "0.8rem", color: "#777" }}>{r.message}</div>}
                   <div style={{ fontSize: "0.75rem", color: "#999" }}>
                     {r.createdAt.toLocaleString("es-CR")}
                   </div>
                 </div>
                 <form action={resolvePasswordChangeRequest}>
                   <input type="hidden" name="id" value={r.id} />
-                  <button
-                    type="submit"
-                    style={{
-                      padding: "0.4rem 0.65rem",
-                      borderRadius: 6,
-                      border: "1px solid var(--crc-brown)",
-                      backgroundColor: "transparent",
-                      color: "var(--crc-brown-dark)",
-                      cursor: "pointer",
-                      fontSize: "0.8rem",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <button type="submit" style={outlineButtonStyle}>
                     Marcar resuelta
                   </button>
                 </form>
@@ -92,14 +129,7 @@ export default async function AdminPage() {
         </section>
       )}
 
-      <section
-        style={{
-          backgroundColor: "var(--crc-white)",
-          borderRadius: 10,
-          padding: "1.5rem",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-        }}
-      >
+      <section style={cardStyle}>
         <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
           Crear usuario
         </h2>
@@ -112,50 +142,19 @@ export default async function AdminPage() {
             alignItems: "end",
           }}
         >
-          <label style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.85rem", color: "var(--crc-brown)" }}>
+          <label style={labelStyle}>
             Nombre completo
-            <input
-              name="fullName"
-              required
-              style={{
-                padding: "0.55rem 0.65rem",
-                borderRadius: 6,
-                border: "1px solid var(--crc-brown)",
-                backgroundColor: "var(--crc-white)",
-                color: "var(--crc-brown-dark)",
-              }}
-            />
+            <input name="fullName" required style={inputStyle} />
           </label>
 
-          <label style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.85rem", color: "var(--crc-brown)" }}>
+          <label style={labelStyle}>
             Correo
-            <input
-              type="email"
-              name="email"
-              required
-              style={{
-                padding: "0.55rem 0.65rem",
-                borderRadius: 6,
-                border: "1px solid var(--crc-brown)",
-                backgroundColor: "var(--crc-white)",
-                color: "var(--crc-brown-dark)",
-              }}
-            />
+            <input type="email" name="email" required style={inputStyle} />
           </label>
 
-          <label style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.85rem", color: "var(--crc-brown)" }}>
+          <label style={labelStyle}>
             Rol
-            <select
-              name="role"
-              defaultValue={Role.READ_ONLY_USER}
-              style={{
-                padding: "0.55rem 0.65rem",
-                borderRadius: 6,
-                border: "1px solid var(--crc-brown)",
-                backgroundColor: "var(--crc-white)",
-                color: "var(--crc-brown-dark)",
-              }}
-            >
+            <select name="role" defaultValue={Role.READ_ONLY_USER} style={inputStyle}>
               {Object.values(Role).map((r) => (
                 <option key={r} value={r}>
                   {ROLE_LABELS[r]}
@@ -164,19 +163,9 @@ export default async function AdminPage() {
             </select>
           </label>
 
-          <label style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.85rem", color: "var(--crc-brown)" }}>
+          <label style={labelStyle}>
             Departamento
-            <select
-              name="departmentId"
-              defaultValue=""
-              style={{
-                padding: "0.55rem 0.65rem",
-                borderRadius: 6,
-                border: "1px solid var(--crc-brown)",
-                backgroundColor: "var(--crc-white)",
-                color: "var(--crc-brown-dark)",
-              }}
-            >
+            <select name="departmentId" defaultValue="" style={inputStyle}>
               <option value="">Sin departamento</option>
               {departments.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -186,21 +175,9 @@ export default async function AdminPage() {
             </select>
           </label>
 
-          <label style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.85rem", color: "var(--crc-brown)" }}>
+          <label style={labelStyle}>
             Contraseña
-            <input
-              type="text"
-              name="password"
-              defaultValue={DEFAULT_PASSWORD}
-              required
-              style={{
-                padding: "0.55rem 0.65rem",
-                borderRadius: 6,
-                border: "1px solid var(--crc-brown)",
-                backgroundColor: "var(--crc-white)",
-                color: "var(--crc-brown-dark)",
-              }}
-            />
+            <input type="text" name="password" defaultValue={DEFAULT_PASSWORD} required style={inputStyle} />
           </label>
 
           <button
@@ -221,108 +198,132 @@ export default async function AdminPage() {
         </form>
       </section>
 
-      <section
-        style={{
-          backgroundColor: "var(--crc-white)",
-          borderRadius: 10,
-          padding: "1.5rem",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          overflowX: "auto",
-        }}
-      >
-        <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
+      <section style={{ ...cardStyle, overflowX: "auto" }}>
+        <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "0.35rem" }}>
           Usuarios existentes
         </h2>
+        <p style={{ color: "#777", fontSize: "0.85rem", marginBottom: "1rem" }}>
+          Edita el nombre, correo, rol o departamento y pulsa Guardar en esa fila.
+        </p>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
           <thead>
             <tr style={{ textAlign: "left", borderBottom: "1px solid #e5ddd3", color: "#888" }}>
-              <th style={{ padding: "0.5rem" }}>Nombre</th>
-              <th style={{ padding: "0.5rem" }}>Correo</th>
-              <th style={{ padding: "0.5rem" }}>Rol</th>
-              <th style={{ padding: "0.5rem" }}>Departamento</th>
-              <th style={{ padding: "0.5rem" }}>Estado</th>
-              <th style={{ padding: "0.5rem" }}>Nueva contraseña</th>
-              <th style={{ padding: "0.5rem" }}></th>
+              <th style={thStyle}>Nombre</th>
+              <th style={thStyle}>Correo</th>
+              <th style={thStyle}>Rol</th>
+              <th style={thStyle}>Departamento</th>
+              <th style={thStyle}>Estado</th>
+              <th style={thStyle}></th>
+              <th style={thStyle}>Nueva contraseña</th>
+              <th style={thStyle}></th>
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
-              <tr key={u.id} style={{ borderBottom: "1px solid #f0ebe3" }}>
-                <td style={{ padding: "0.5rem", color: "var(--crc-brown-dark)", fontWeight: 600 }}>
-                  {u.fullName}
-                </td>
-                <td style={{ padding: "0.5rem", color: "#555" }}>{u.email}</td>
-                <td style={{ padding: "0.5rem", color: "#555" }}>{ROLE_LABELS[u.role]}</td>
-                <td style={{ padding: "0.5rem", color: "#555" }}>{u.department?.name ?? "—"}</td>
-                <td style={{ padding: "0.5rem" }}>
-                  <span
-                    style={{
-                      padding: "0.15rem 0.5rem",
-                      borderRadius: 999,
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      backgroundColor: u.isActive ? "#e6f0e0" : "#f3e6e6",
-                      color: u.isActive ? "var(--crc-green)" : "#a33",
-                    }}
-                  >
-                    {u.isActive ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td style={{ padding: "0.5rem" }}>
-                  <form action={resetPassword} style={{ display: "flex", gap: "0.4rem" }}>
-                    <input type="hidden" name="userId" value={u.id} />
+            {users.map((u) => {
+              // Un <form> no puede envolver varias celdas, así que los campos se asocian
+              // al formulario de su fila con el atributo form.
+              const editFormId = `edit-${u.id}`
+
+              return (
+                // defaultValue solo aplica al montar: sin updatedAt en la key, tras guardar
+                // los campos seguirían mostrando el valor anterior.
+                <tr
+                  key={`${u.id}-${u.updatedAt.toISOString()}`}
+                  style={{ borderBottom: "1px solid #f0ebe3" }}
+                >
+                  <td style={{ padding: "0.5rem", minWidth: 150 }}>
                     <input
-                      type="text"
-                      name="password"
-                      placeholder="Nueva clave"
+                      form={editFormId}
+                      name="fullName"
+                      defaultValue={u.fullName}
                       required
-                      style={{
-                        padding: "0.4rem 0.5rem",
-                        borderRadius: 6,
-                        border: "1px solid var(--crc-brown)",
-                        backgroundColor: "var(--crc-white)",
-                        color: "var(--crc-brown-dark)",
-                        width: 130,
-                      }}
+                      style={cellInputStyle}
                     />
-                    <button
-                      type="submit"
+                  </td>
+                  <td style={{ padding: "0.5rem", minWidth: 220 }}>
+                    <input
+                      form={editFormId}
+                      type="email"
+                      name="email"
+                      defaultValue={u.email}
+                      required
+                      style={cellInputStyle}
+                    />
+                  </td>
+                  <td style={{ padding: "0.5rem", minWidth: 170 }}>
+                    <select form={editFormId} name="role" defaultValue={u.role} style={cellInputStyle}>
+                      {Object.values(Role).map((r) => (
+                        <option key={r} value={r}>
+                          {ROLE_LABELS[r]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td style={{ padding: "0.5rem", minWidth: 170 }}>
+                    <select
+                      form={editFormId}
+                      name="departmentId"
+                      defaultValue={u.departmentId ?? ""}
+                      style={cellInputStyle}
+                    >
+                      <option value="">Sin departamento</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td style={{ padding: "0.5rem" }}>
+                    <span
                       style={{
-                        padding: "0.4rem 0.65rem",
-                        borderRadius: 6,
-                        border: "1px solid var(--crc-brown)",
-                        backgroundColor: "transparent",
-                        color: "var(--crc-brown-dark)",
-                        cursor: "pointer",
-                        fontSize: "0.8rem",
+                        padding: "0.15rem 0.5rem",
+                        borderRadius: 999,
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                        backgroundColor: u.isActive ? "#e6f0e0" : "#f3e6e6",
+                        color: u.isActive ? "var(--crc-green)" : "#a33",
                       }}
                     >
-                      Actualizar
-                    </button>
-                  </form>
-                </td>
-                <td style={{ padding: "0.5rem" }}>
-                  <form action={toggleUserActive}>
-                    <input type="hidden" name="userId" value={u.id} />
-                    <input type="hidden" name="nextActive" value={(!u.isActive).toString()} />
-                    <button
-                      type="submit"
-                      style={{
-                        padding: "0.4rem 0.65rem",
-                        borderRadius: 6,
-                        border: "1px solid var(--crc-brown)",
-                        backgroundColor: "transparent",
-                        color: "var(--crc-brown-dark)",
-                        cursor: "pointer",
-                        fontSize: "0.8rem",
-                      }}
-                    >
-                      {u.isActive ? "Desactivar" : "Activar"}
-                    </button>
-                  </form>
-                </td>
-              </tr>
-            ))}
+                      {u.isActive ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "0.5rem" }}>
+                    <form id={editFormId} action={updateUser}>
+                      <input type="hidden" name="userId" value={u.id} />
+                      <button type="submit" style={primaryButtonStyle}>
+                        Guardar
+                      </button>
+                    </form>
+                  </td>
+                  <td style={{ padding: "0.5rem" }}>
+                    <form action={resetPassword} style={{ display: "flex", gap: "0.4rem" }}>
+                      <input type="hidden" name="userId" value={u.id} />
+                      <input
+                        type="text"
+                        name="password"
+                        placeholder="Nueva clave"
+                        required
+                        style={{ ...cellInputStyle, width: 130 }}
+                      />
+                      <button type="submit" style={outlineButtonStyle}>
+                        Actualizar
+                      </button>
+                    </form>
+                  </td>
+                  <td style={{ padding: "0.5rem" }}>
+                    <form action={toggleUserActive}>
+                      <input type="hidden" name="userId" value={u.id} />
+                      <input type="hidden" name="nextActive" value={(!u.isActive).toString()} />
+                      <button type="submit" style={outlineButtonStyle}>
+                        {u.isActive ? "Desactivar" : "Activar"}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </section>

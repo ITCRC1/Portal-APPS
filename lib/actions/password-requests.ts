@@ -35,5 +35,5 @@ export async function resolvePasswordChangeRequest(formData: FormData) {
     data: { status: "resolved", resolvedAt: new Date() },
   })
 
-  revalidatePath("/admin/users")
+  revalidatePath("/admin")
 }

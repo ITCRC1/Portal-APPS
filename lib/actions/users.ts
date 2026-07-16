@@ -31,6 +31,11 @@ export async function createUser(formData: FormData) {
     throw new Error("Rol inválido")
   }
 
+  const existing = await prisma.user.findUnique({ where: { email } })
+  if (existing) {
+    throw new Error("Ese correo ya está registrado")
+  }
+
   const passwordHash = await argon2.hash(password)
 
   await prisma.user.create({
@@ -43,7 +48,46 @@ export async function createUser(formData: FormData) {
     },
   })
 
-  revalidatePath("/admin/users")
+  revalidatePath("/admin")
+}
+
+export async function updateUser(formData: FormData) {
+  await requireSuperAdmin()
+
+  const userId = String(formData.get("userId") ?? "")
+  const fullName = String(formData.get("fullName") ?? "").trim()
+  const email = String(formData.get("email") ?? "").trim().toLowerCase()
+  const roleValue = String(formData.get("role") ?? "")
+  const departmentId = String(formData.get("departmentId") ?? "") || null
+
+  if (!userId) {
+    throw new Error("Falta el usuario")
+  }
+
+  if (!fullName || !email) {
+    throw new Error("Nombre y correo son obligatorios")
+  }
+
+  if (!Object.values(Role).includes(roleValue as Role)) {
+    throw new Error("Rol inválido")
+  }
+
+  const emailOwner = await prisma.user.findUnique({ where: { email } })
+  if (emailOwner && emailOwner.id !== userId) {
+    throw new Error("Ese correo ya está en uso por otro usuario")
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      fullName,
+      email,
+      role: roleValue as Role,
+      departmentId,
+    },
+  })
+
+  revalidatePath("/admin")
 }
 
 export async function resetPassword(formData: FormData) {
@@ -63,7 +107,7 @@ export async function resetPassword(formData: FormData) {
     data: { passwordHash },
   })
 
-  revalidatePath("/admin/users")
+  revalidatePath("/admin")
 }
 
 export async function toggleUserActive(formData: FormData) {
@@ -81,5 +125,5 @@ export async function toggleUserActive(formData: FormData) {
     data: { isActive: nextActive },
   })
 
-  revalidatePath("/admin/users")
+  revalidatePath("/admin")
 }
