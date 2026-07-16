@@ -18,7 +18,7 @@ const labelStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: "0.35rem",
-  fontSize: "0.8rem",
+  fontSize: "0.85rem",
   color: "var(--crc-brown)",
 }
 
@@ -31,34 +31,50 @@ const inputStyle: CSSProperties = {
   minWidth: 0,
 }
 
-const fieldGridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-  gap: "0.75rem",
+// Los campos de la tabla se estiran a su celda; table-layout: fixed les da el ancho.
+const cellInputStyle: CSSProperties = {
+  width: "100%",
+  minWidth: 0,
+  padding: "0.4rem 0.45rem",
+  borderRadius: 6,
+  border: "1px solid var(--crc-brown)",
+  backgroundColor: "var(--crc-white)",
+  color: "var(--crc-brown-dark)",
+  fontSize: "0.8rem",
 }
 
 const outlineButtonStyle: CSSProperties = {
-  padding: "0.5rem 0.75rem",
+  padding: "0.4rem 0.5rem",
   borderRadius: 6,
   border: "1px solid var(--crc-brown)",
   backgroundColor: "var(--crc-white)",
   color: "var(--crc-brown-dark)",
   cursor: "pointer",
-  fontSize: "0.8rem",
+  fontSize: "0.75rem",
   whiteSpace: "nowrap",
 }
 
 const primaryButtonStyle: CSSProperties = {
-  padding: "0.5rem 1rem",
+  width: "100%",
+  padding: "0.4rem 0.5rem",
   borderRadius: 6,
   border: "none",
   backgroundColor: "var(--crc-green)",
   color: "var(--crc-white)",
   fontWeight: 600,
   cursor: "pointer",
-  fontSize: "0.8rem",
+  fontSize: "0.75rem",
   whiteSpace: "nowrap",
 }
+
+const thStyle: CSSProperties = {
+  padding: "0.4rem 0.35rem",
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  whiteSpace: "nowrap",
+}
+
+const tdStyle: CSSProperties = { padding: "0.4rem 0.35rem", verticalAlign: "middle" }
 
 export default async function AdminPage() {
   const [users, departments, pendingRequests] = await Promise.all([
@@ -115,7 +131,7 @@ export default async function AdminPage() {
                 </div>
                 <form action={resolvePasswordChangeRequest}>
                   <input type="hidden" name="id" value={r.id} />
-                  <button type="submit" style={outlineButtonStyle}>
+                  <button type="submit" style={{ ...outlineButtonStyle, padding: "0.5rem 0.75rem", fontSize: "0.8rem" }}>
                     Marcar resuelta
                   </button>
                 </form>
@@ -129,7 +145,15 @@ export default async function AdminPage() {
         <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
           Crear usuario
         </h2>
-        <form action={createUser} style={{ ...fieldGridStyle, alignItems: "end", gap: "1rem" }}>
+        <form
+          action={createUser}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+            gap: "1rem",
+            alignItems: "end",
+          }}
+        >
           <label style={labelStyle}>
             Nombre completo
             <input name="fullName" required style={inputStyle} />
@@ -168,7 +192,19 @@ export default async function AdminPage() {
             <input type="text" name="password" defaultValue={DEFAULT_PASSWORD} required style={inputStyle} />
           </label>
 
-          <button type="submit" style={{ ...primaryButtonStyle, padding: "0.6rem 1rem", height: "fit-content" }}>
+          <button
+            type="submit"
+            style={{
+              padding: "0.6rem 1rem",
+              borderRadius: 6,
+              border: "none",
+              backgroundColor: "var(--crc-green)",
+              color: "var(--crc-white)",
+              fontWeight: 600,
+              cursor: "pointer",
+              height: "fit-content",
+            }}
+          >
             Crear usuario
           </button>
         </form>
@@ -179,77 +215,82 @@ export default async function AdminPage() {
           Usuarios existentes ({users.length})
         </h2>
         <p style={{ color: "#777", fontSize: "0.85rem", marginBottom: "1rem" }}>
-          Edita los campos que necesites y pulsa Guardar en ese usuario.
+          Edita el nombre, correo, rol o departamento y pulsa Guardar en esa fila.
         </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {users.map((u) => {
-            const editFormId = `edit-${u.id}`
+        {/* table-layout: fixed + anchos en % => la tabla siempre cabe, sin scroll horizontal. */}
+        <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
+          <colgroup>
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "19%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "7%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "13%" }} />
+            <col style={{ width: "11%" }} />
+          </colgroup>
+          <thead>
+            <tr style={{ textAlign: "left", borderBottom: "1px solid #e5ddd3", color: "#888" }}>
+              <th style={thStyle}>Nombre</th>
+              <th style={thStyle}>Correo</th>
+              <th style={thStyle}>Rol</th>
+              <th style={thStyle}>Departamento</th>
+              <th style={thStyle}>Estado</th>
+              <th style={thStyle}></th>
+              <th style={thStyle}>Nueva clave</th>
+              <th style={thStyle}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u) => {
+              // Un <form> no puede envolver varias celdas, así que los campos se asocian
+              // al formulario de su fila con el atributo form.
+              const editFormId = `edit-${u.id}`
 
-            return (
-              // defaultValue solo aplica al montar: sin updatedAt en la key, tras guardar
-              // los campos seguirían mostrando el valor anterior.
-              <div
-                key={`${u.id}-${u.updatedAt.toISOString()}`}
-                style={{
-                  border: "1px solid #e5ddd3",
-                  borderRadius: 8,
-                  padding: "1rem",
-                  backgroundColor: "var(--crc-sand)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    marginBottom: "0.75rem",
-                  }}
+              return (
+                // defaultValue solo aplica al montar: sin updatedAt en la key, tras guardar
+                // los campos seguirían mostrando el valor anterior.
+                <tr
+                  key={`${u.id}-${u.updatedAt.toISOString()}`}
+                  style={{ borderBottom: "1px solid #f0ebe3" }}
                 >
-                  <span style={{ fontWeight: 700, color: "var(--crc-brown-dark)" }}>{u.fullName}</span>
-                  <span
-                    style={{
-                      padding: "0.15rem 0.5rem",
-                      borderRadius: 999,
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      whiteSpace: "nowrap",
-                      backgroundColor: u.isActive ? "#e6f0e0" : "#f3e6e6",
-                      color: u.isActive ? "var(--crc-green)" : "#a33",
-                    }}
-                  >
-                    {u.isActive ? "Activo" : "Inactivo"}
-                  </span>
-                </div>
-
-                <form id={editFormId} action={updateUser} style={fieldGridStyle}>
-                  <input type="hidden" name="userId" value={u.id} />
-
-                  <label style={labelStyle}>
-                    Nombre completo
-                    <input name="fullName" defaultValue={u.fullName} required style={inputStyle} />
-                  </label>
-
-                  <label style={labelStyle}>
-                    Correo
-                    <input type="email" name="email" defaultValue={u.email} required style={inputStyle} />
-                  </label>
-
-                  <label style={labelStyle}>
-                    Rol
-                    <select name="role" defaultValue={u.role} style={inputStyle}>
+                  <td style={tdStyle}>
+                    <input
+                      form={editFormId}
+                      name="fullName"
+                      defaultValue={u.fullName}
+                      required
+                      style={cellInputStyle}
+                    />
+                  </td>
+                  <td style={tdStyle}>
+                    <input
+                      form={editFormId}
+                      type="email"
+                      name="email"
+                      defaultValue={u.email}
+                      required
+                      title={u.email}
+                      style={cellInputStyle}
+                    />
+                  </td>
+                  <td style={tdStyle}>
+                    <select form={editFormId} name="role" defaultValue={u.role} style={cellInputStyle}>
                       {Object.values(Role).map((r) => (
                         <option key={r} value={r}>
                           {ROLE_LABELS[r]}
                         </option>
                       ))}
                     </select>
-                  </label>
-
-                  <label style={labelStyle}>
-                    Departamento
-                    <select name="departmentId" defaultValue={u.departmentId ?? ""} style={inputStyle}>
+                  </td>
+                  <td style={tdStyle}>
+                    <select
+                      form={editFormId}
+                      name="departmentId"
+                      defaultValue={u.departmentId ?? ""}
+                      style={cellInputStyle}
+                    >
                       <option value="">Sin departamento</option>
                       {departments.map((d) => (
                         <option key={d.id} value={d.id}>
@@ -257,53 +298,63 @@ export default async function AdminPage() {
                         </option>
                       ))}
                     </select>
-                  </label>
-                </form>
-
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    marginTop: "0.85rem",
-                    paddingTop: "0.85rem",
-                    borderTop: "1px solid #e5ddd3",
-                  }}
-                >
-                  {/* El botón vive fuera del <form> para alinearlo con las demás acciones. */}
-                  <button type="submit" form={editFormId} style={primaryButtonStyle}>
-                    Guardar
-                  </button>
-
-                  <div style={{ flex: 1 }} />
-
-                  <form action={resetPassword} style={{ display: "flex", gap: "0.4rem" }}>
-                    <input type="hidden" name="userId" value={u.id} />
-                    <input
-                      type="text"
-                      name="password"
-                      placeholder="Nueva clave"
-                      required
-                      style={{ ...inputStyle, padding: "0.5rem", fontSize: "0.8rem", width: 130 }}
-                    />
-                    <button type="submit" style={outlineButtonStyle}>
-                      Actualizar
-                    </button>
-                  </form>
-
-                  <form action={toggleUserActive}>
-                    <input type="hidden" name="userId" value={u.id} />
-                    <input type="hidden" name="nextActive" value={(!u.isActive).toString()} />
-                    <button type="submit" style={outlineButtonStyle}>
-                      {u.isActive ? "Desactivar" : "Activar"}
-                    </button>
-                  </form>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+                  </td>
+                  <td style={tdStyle}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "0.15rem 0.45rem",
+                        borderRadius: 999,
+                        fontSize: "0.7rem",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                        backgroundColor: u.isActive ? "#e6f0e0" : "#f3e6e6",
+                        color: u.isActive ? "var(--crc-green)" : "#a33",
+                      }}
+                    >
+                      {u.isActive ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td style={tdStyle}>
+                    <form id={editFormId} action={updateUser}>
+                      <input type="hidden" name="userId" value={u.id} />
+                      <button type="submit" style={primaryButtonStyle}>
+                        Guardar
+                      </button>
+                    </form>
+                  </td>
+                  <td style={tdStyle}>
+                    <form
+                      action={resetPassword}
+                      style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}
+                    >
+                      <input type="hidden" name="userId" value={u.id} />
+                      <input
+                        type="text"
+                        name="password"
+                        placeholder="Clave"
+                        required
+                        style={cellInputStyle}
+                      />
+                      <button type="submit" title="Actualizar contraseña" style={outlineButtonStyle}>
+                        OK
+                      </button>
+                    </form>
+                  </td>
+                  <td style={tdStyle}>
+                    <form action={toggleUserActive}>
+                      <input type="hidden" name="userId" value={u.id} />
+                      <input type="hidden" name="nextActive" value={(!u.isActive).toString()} />
+                      <button type="submit" style={{ ...outlineButtonStyle, width: "100%" }}>
+                        {u.isActive ? "Desactivar" : "Activar"}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </section>
     </div>
   )
