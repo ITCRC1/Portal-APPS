@@ -52,6 +52,8 @@ export function AnnouncementCard({
 
   return (
     <div
+      data-testid={`announcement-card-${a.id}`}
+      data-can-manage={canManage ? "true" : "false"}
       style={{
         backgroundColor: "var(--crc-white)",
         borderRadius: 10,

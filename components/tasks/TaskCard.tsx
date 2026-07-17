@@ -63,6 +63,8 @@ export function TaskCard({
 
   return (
     <div
+      data-testid={`task-card-${task.id}`}
+      data-can-modify={canModify ? "true" : "false"}
       style={{
         backgroundColor: "var(--crc-white)",
         borderRadius: 8,
