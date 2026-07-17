@@ -85,6 +85,7 @@ model Department {
   systemLinks SystemLink[]
   documents   Document[]
   tasks       Task[]
+  announcements Announcement[]
 }
 
 model User {
@@ -107,6 +108,7 @@ model User {
   documents Document[]
   assignedTasks Task[] @relation("AssignedTasks")
   createdTasks  Task[] @relation("CreatedTasks")
+  announcements Announcement[] @relation("PublishedAnnouncements")
 }
 
 model SystemLink {
@@ -172,6 +174,28 @@ model Task {
 
   createdById String?
   createdBy   User?    @relation("CreatedTasks", fields: [createdById], references: [id])
+}
+
+// Aviso / anuncio interno (PRD 13). Lo publican los roles corporativos; los usuarios
+// solo lo leen. Un aviso sin departamento (departmentId null) es general para toda la
+// empresa; con departamento, solo lo ve ese departamento (más los roles corporativos).
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  body        String
+  level       String    @default("info") // info | warning | critical
+  status      String    @default("active") // active | archived
+  pinned      Boolean   @default(false)
+  publishedAt DateTime  @default(now())
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  publishedById String?
+  publishedBy   User?    @relation("PublishedAnnouncements", fields: [publishedById], references: [id])
 }
 
 // Ticket de solicitud de cambio de contraseña: el usuario pide, el admin lo resuelve
