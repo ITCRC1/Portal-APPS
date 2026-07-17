@@ -198,6 +198,25 @@ model Announcement {
   publishedBy   User?    @relation("PublishedAnnouncements", fields: [publishedById], references: [id])
 }
 
+// Bitácora de auditoría: registra quién hizo qué sobre usuarios, departamentos,
+// documentos, tareas, avisos y tickets. El actor se guarda como copia (email/rol) para
+// que el registro sobreviva aunque el usuario se elimine; por eso no hay relación FK.
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // created | updated | deleted | activated | deactivated | resolved
+  entityType  String   // user | department | document | task | announcement | password-request
+  entityId    String?
+  entityLabel String
+  details     String?
+  actorId     String?
+  actorEmail  String
+  actorRole   String
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType])
+}
+
 // Ticket de solicitud de cambio de contraseña: el usuario pide, el admin lo resuelve
 // manualmente desde /admin/users (no hay flujo de auto-reset por correo/token).
 model PasswordChangeRequest {

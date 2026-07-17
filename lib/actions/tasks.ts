@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
+import { recordAudit } from "@/lib/audit"
 import { canAccessModule, canViewAllDepartments } from "@/lib/permissions"
 import {
   TASK_STATUSES,
@@ -94,7 +95,7 @@ export async function createTask(formData: FormData) {
     orderBy: { order: "desc" },
   })
 
-  await prisma.task.create({
+  const created = await prisma.task.create({
     data: {
       title,
       description,
@@ -106,6 +107,13 @@ export async function createTask(formData: FormData) {
       assignedToId,
       createdById: actor.id,
     },
+  })
+
+  await recordAudit({
+    action: "created",
+    entityType: "task",
+    entityId: created.id,
+    entityLabel: title,
   })
 
   revalidatePath("/tasks")
@@ -136,7 +144,15 @@ export async function updateTaskStatus(formData: FormData) {
   }
 
   await requireModifiableTask(actor, id)
-  await prisma.task.update({ where: { id }, data: { status } })
+  const updated = await prisma.task.update({ where: { id }, data: { status } })
+
+  await recordAudit({
+    action: "updated",
+    entityType: "task",
+    entityId: id,
+    entityLabel: updated.title,
+    details: `estado: ${status}`,
+  })
 
   revalidatePath("/tasks")
 }
@@ -147,7 +163,15 @@ export async function deleteTask(formData: FormData) {
   if (!id) throw new Error("Falta la tarea")
 
   await requireModifiableTask(actor, id)
+  const task = await prisma.task.findUnique({ where: { id }, select: { title: true } })
   await prisma.task.delete({ where: { id } })
+
+  await recordAudit({
+    action: "deleted",
+    entityType: "task",
+    entityId: id,
+    entityLabel: task?.title ?? id,
+  })
 
   revalidatePath("/tasks")
 }

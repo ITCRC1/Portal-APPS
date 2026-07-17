@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
+import { recordAudit } from "@/lib/audit"
 
 async function requireSuperAdmin() {
   const session = await auth()
@@ -48,7 +49,7 @@ export async function createDepartment(formData: FormData) {
 
   const last = await prisma.department.findFirst({ orderBy: { order: "desc" } })
 
-  await prisma.department.create({
+  const created = await prisma.department.create({
     data: {
       name,
       slug,
@@ -58,6 +59,13 @@ export async function createDepartment(formData: FormData) {
       ownerEmail,
       order: (last?.order ?? 0) + 1,
     },
+  })
+
+  await recordAudit({
+    action: "created",
+    entityType: "department",
+    entityId: created.id,
+    entityLabel: name,
   })
 
   revalidatePath("/admin")
@@ -89,6 +97,13 @@ export async function updateDepartment(formData: FormData) {
     data: { name, description, icon, ownerName, ownerEmail },
   })
 
+  await recordAudit({
+    action: "updated",
+    entityType: "department",
+    entityId: id,
+    entityLabel: name,
+  })
+
   revalidatePath("/admin")
   revalidatePath("/departments")
 }
@@ -103,9 +118,16 @@ export async function toggleDepartmentStatus(formData: FormData) {
     throw new Error("Falta el departamento")
   }
 
-  await prisma.department.update({
+  const updated = await prisma.department.update({
     where: { id },
     data: { status: nextStatus },
+  })
+
+  await recordAudit({
+    action: nextStatus === "active" ? "activated" : "deactivated",
+    entityType: "department",
+    entityId: id,
+    entityLabel: updated.name,
   })
 
   revalidatePath("/admin")

@@ -2,6 +2,7 @@ import { PasswordRequestsPanel } from "@/components/admin/PasswordRequestsPanel"
 import { UsersPanel } from "@/components/admin/UsersPanel"
 import { DepartmentsPanel } from "@/components/admin/DepartmentsPanel"
 import { DocumentsPanel } from "@/components/admin/DocumentsPanel"
+import { AuditLogPanel } from "@/components/admin/AuditLogPanel"
 
 export default function AdminPage() {
   return (
@@ -11,7 +12,7 @@ export default function AdminPage() {
           Panel de Administración
         </h1>
         <p style={{ color: "#777" }}>
-          Enlaces, KPIs, anuncios, alertas y tareas se irán agregando aquí.
+          Usuarios, departamentos, documentos, tickets de contraseña y bitácora de auditoría.
         </p>
       </div>
 
@@ -19,6 +20,7 @@ export default function AdminPage() {
       <UsersPanel />
       <DepartmentsPanel />
       <DocumentsPanel />
+      <AuditLogPanel />
     </div>
   )
 }

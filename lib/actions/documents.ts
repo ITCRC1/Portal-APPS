@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
+import { recordAudit } from "@/lib/audit"
 import { CONFIDENTIALITY_LABELS } from "@/lib/permissions"
 
 const MAX_SIZE = 15 * 1024 * 1024 // 15 MB
@@ -84,7 +85,7 @@ export async function createDocument(formData: FormData) {
     orderBy: { order: "desc" },
   })
 
-  await prisma.document.create({
+  const created = await prisma.document.create({
     data: {
       name,
       description,
@@ -101,6 +102,14 @@ export async function createDocument(formData: FormData) {
     },
   })
 
+  await recordAudit({
+    action: "created",
+    entityType: "document",
+    entityId: created.id,
+    entityLabel: name,
+    details: `${CONFIDENTIALITY_LABELS[confidentiality] ?? confidentiality}`,
+  })
+
   revalidatePath("/admin")
   revalidatePath("/documents")
 }
@@ -114,7 +123,14 @@ export async function toggleDocumentStatus(formData: FormData) {
     throw new Error("Falta el documento")
   }
 
-  await prisma.document.update({ where: { id }, data: { status: nextStatus } })
+  const updated = await prisma.document.update({ where: { id }, data: { status: nextStatus } })
+
+  await recordAudit({
+    action: nextStatus === "active" ? "activated" : "deactivated",
+    entityType: "document",
+    entityId: id,
+    entityLabel: updated.name,
+  })
 
   revalidatePath("/admin")
   revalidatePath("/documents")
@@ -128,7 +144,15 @@ export async function deleteDocument(formData: FormData) {
     throw new Error("Falta el documento")
   }
 
+  const doc = await prisma.document.findUnique({ where: { id }, select: { name: true } })
   await prisma.document.delete({ where: { id } })
+
+  await recordAudit({
+    action: "deleted",
+    entityType: "document",
+    entityId: id,
+    entityLabel: doc?.name ?? id,
+  })
 
   revalidatePath("/admin")
   revalidatePath("/documents")

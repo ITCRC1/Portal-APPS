@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
+import { recordAudit } from "@/lib/audit"
 
 async function requireSuperAdmin() {
   const session = await auth()
@@ -38,7 +39,7 @@ export async function createUser(formData: FormData) {
 
   const passwordHash = await argon2.hash(password)
 
-  await prisma.user.create({
+  const created = await prisma.user.create({
     data: {
       fullName,
       email,
@@ -46,6 +47,14 @@ export async function createUser(formData: FormData) {
       role: roleValue as Role,
       departmentId,
     },
+  })
+
+  await recordAudit({
+    action: "created",
+    entityType: "user",
+    entityId: created.id,
+    entityLabel: `${fullName} <${email}>`,
+    details: `rol: ${roleValue}`,
   })
 
   revalidatePath("/admin")
@@ -90,6 +99,14 @@ export async function updateUser(formData: FormData) {
     },
   })
 
+  await recordAudit({
+    action: "updated",
+    entityType: "user",
+    entityId: userId,
+    entityLabel: `${fullName} <${email}>`,
+    details: password ? "incluye cambio de contraseña" : null,
+  })
+
   revalidatePath("/admin")
 }
 
@@ -103,9 +120,16 @@ export async function toggleUserActive(formData: FormData) {
     throw new Error("Falta el usuario")
   }
 
-  await prisma.user.update({
+  const updated = await prisma.user.update({
     where: { id: userId },
     data: { isActive: nextActive },
+  })
+
+  await recordAudit({
+    action: nextActive ? "activated" : "deactivated",
+    entityType: "user",
+    entityId: userId,
+    entityLabel: `${updated.fullName} <${updated.email}>`,
   })
 
   revalidatePath("/admin")

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
+import { recordAudit } from "@/lib/audit"
 import { ANNOUNCEMENT_LEVELS, canPublishAnnouncements } from "@/lib/announcements"
 
 type Publisher = { id: string; role: Role }
@@ -46,7 +47,7 @@ export async function createAnnouncement(formData: FormData) {
     if (!dept) throw new Error("Departamento inválido")
   }
 
-  await prisma.announcement.create({
+  const created = await prisma.announcement.create({
     data: {
       title,
       body,
@@ -57,6 +58,14 @@ export async function createAnnouncement(formData: FormData) {
       departmentId,
       publishedById: publisher.id,
     },
+  })
+
+  await recordAudit({
+    action: "created",
+    entityType: "announcement",
+    entityId: created.id,
+    entityLabel: title,
+    details: `nivel: ${level}`,
   })
 
   revalidatePath("/alerts")
@@ -70,7 +79,14 @@ export async function toggleAnnouncementStatus(formData: FormData) {
   if (!id) throw new Error("Falta el aviso")
   const nextStatus = formData.get("nextStatus") === "active" ? "active" : "archived"
 
-  await prisma.announcement.update({ where: { id }, data: { status: nextStatus } })
+  const updated = await prisma.announcement.update({ where: { id }, data: { status: nextStatus } })
+
+  await recordAudit({
+    action: nextStatus === "active" ? "activated" : "deactivated",
+    entityType: "announcement",
+    entityId: id,
+    entityLabel: updated.title,
+  })
 
   revalidatePath("/alerts")
   revalidatePath("/dashboard")
@@ -83,7 +99,15 @@ export async function toggleAnnouncementPinned(formData: FormData) {
   if (!id) throw new Error("Falta el aviso")
   const pinned = formData.get("pinned") === "true"
 
-  await prisma.announcement.update({ where: { id }, data: { pinned } })
+  const updated = await prisma.announcement.update({ where: { id }, data: { pinned } })
+
+  await recordAudit({
+    action: "updated",
+    entityType: "announcement",
+    entityId: id,
+    entityLabel: updated.title,
+    details: pinned ? "fijado" : "desfijado",
+  })
 
   revalidatePath("/alerts")
   revalidatePath("/dashboard")
@@ -95,7 +119,15 @@ export async function deleteAnnouncement(formData: FormData) {
   const id = String(formData.get("announcementId") ?? "")
   if (!id) throw new Error("Falta el aviso")
 
+  const ann = await prisma.announcement.findUnique({ where: { id }, select: { title: true } })
   await prisma.announcement.delete({ where: { id } })
+
+  await recordAudit({
+    action: "deleted",
+    entityType: "announcement",
+    entityId: id,
+    entityLabel: ann?.title ?? id,
+  })
 
   revalidatePath("/alerts")
   revalidatePath("/dashboard")
