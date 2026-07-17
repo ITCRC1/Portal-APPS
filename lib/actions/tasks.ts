@@ -1,0 +1,153 @@
+"use server"
+
+import { revalidatePath } from "next/cache"
+import type { Role } from "@prisma/client"
+import { prisma } from "@/lib/prisma"
+import { auth } from "@/auth"
+import { canAccessModule, canViewAllDepartments } from "@/lib/permissions"
+import {
+  TASK_STATUSES,
+  TASK_PRIORITIES,
+  canModifyTask,
+  type TaskStatus,
+} from "@/lib/tasks"
+
+type Actor = { id: string; role: Role; departmentId: string | null }
+
+async function requireTasksActor(): Promise<Actor> {
+  const session = await auth()
+  const user = session?.user as
+    | { id?: string; role?: Role; departmentId?: string | null }
+    | undefined
+  if (!user?.id || !user.role || !canAccessModule(user.role, "tasks")) {
+    throw new Error("No autorizado")
+  }
+  return { id: user.id, role: user.role, departmentId: user.departmentId ?? null }
+}
+
+/**
+ * Departamento en el que la tarea puede vivir según quién la crea/edita.
+ * Un usuario sin visión corporativa solo puede trabajar en su propio departamento;
+ * se ignora cualquier departmentId que llegue del formulario para que no pueda
+ * crear tareas en departamentos ajenos.
+ */
+function resolveDepartmentId(actor: Actor, requested: string | null): string | null {
+  if (canViewAllDepartments(actor.role)) return requested
+  if (!actor.departmentId) {
+    throw new Error("No tienes un departamento asignado para crear tareas")
+  }
+  return actor.departmentId
+}
+
+// El responsable debe pertenecer al departamento de la tarea (o ser corporativo).
+async function validateAssignee(
+  assigneeId: string | null,
+  taskDepartmentId: string | null
+): Promise<string | null> {
+  if (!assigneeId) return null
+  const assignee = await prisma.user.findUnique({
+    where: { id: assigneeId },
+    select: { departmentId: true, role: true, isActive: true },
+  })
+  if (!assignee || !assignee.isActive) {
+    throw new Error("El responsable seleccionado no es válido")
+  }
+  const assigneeIsCorporate = canViewAllDepartments(assignee.role)
+  if (
+    taskDepartmentId !== null &&
+    !assigneeIsCorporate &&
+    assignee.departmentId !== taskDepartmentId
+  ) {
+    throw new Error("El responsable no pertenece a ese departamento")
+  }
+  return assigneeId
+}
+
+export async function createTask(formData: FormData) {
+  const actor = await requireTasksActor()
+
+  const title = String(formData.get("title") ?? "").trim()
+  if (!title) {
+    throw new Error("La tarea necesita un título")
+  }
+  const description = String(formData.get("description") ?? "").trim() || null
+
+  const priority = String(formData.get("priority") ?? "medium")
+  if (!TASK_PRIORITIES.includes(priority as (typeof TASK_PRIORITIES)[number])) {
+    throw new Error("Prioridad inválida")
+  }
+
+  const dueRaw = String(formData.get("dueDate") ?? "").trim()
+  const dueDate = dueRaw ? new Date(dueRaw) : null
+  if (dueDate && Number.isNaN(dueDate.getTime())) {
+    throw new Error("Fecha límite inválida")
+  }
+
+  const departmentId = resolveDepartmentId(actor, String(formData.get("departmentId") ?? "") || null)
+  const assignedToId = await validateAssignee(
+    String(formData.get("assignedToId") ?? "") || null,
+    departmentId
+  )
+
+  const last = await prisma.task.findFirst({
+    where: { departmentId, status: "todo" },
+    orderBy: { order: "desc" },
+  })
+
+  await prisma.task.create({
+    data: {
+      title,
+      description,
+      status: "todo",
+      priority,
+      dueDate,
+      order: (last?.order ?? 0) + 1,
+      departmentId,
+      assignedToId,
+      createdById: actor.id,
+    },
+  })
+
+  revalidatePath("/tasks")
+}
+
+// Autoriza sobre la tarea ya existente comprobando su departamento real.
+async function requireModifiableTask(actor: Actor, taskId: string) {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { id: true, departmentId: true },
+  })
+  if (!task) {
+    throw new Error("La tarea no existe")
+  }
+  if (!canModifyTask(actor.role, actor.departmentId, task.departmentId)) {
+    throw new Error("No autorizado")
+  }
+  return task
+}
+
+export async function updateTaskStatus(formData: FormData) {
+  const actor = await requireTasksActor()
+  const id = String(formData.get("taskId") ?? "")
+  const status = String(formData.get("status") ?? "")
+  if (!id) throw new Error("Falta la tarea")
+  if (!TASK_STATUSES.includes(status as TaskStatus)) {
+    throw new Error("Estado inválido")
+  }
+
+  await requireModifiableTask(actor, id)
+  await prisma.task.update({ where: { id }, data: { status } })
+
+  revalidatePath("/tasks")
+}
+
+export async function deleteTask(formData: FormData) {
+  const actor = await requireTasksActor()
+  const id = String(formData.get("taskId") ?? "")
+  if (!id) throw new Error("Falta la tarea")
+
+  await requireModifiableTask(actor, id)
+  await prisma.task.delete({ where: { id } })
+
+  revalidatePath("/tasks")
+}
