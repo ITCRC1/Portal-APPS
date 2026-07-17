@@ -4,6 +4,8 @@ import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
 import { canAccessDepartment, ROLE_LABELS } from "@/lib/permissions"
+import { visibleDocumentsWhere } from "@/lib/documents"
+import { DocumentCard } from "@/components/documents/DocumentCard"
 
 export default async function DepartmentPage({
   params,
@@ -37,6 +39,23 @@ export default async function DepartmentPage({
   if (!canAccessDepartment(role, session.user.departmentId, department.id)) {
     redirect("/departments")
   }
+
+  // Solo los documentos de esta área que el usuario tiene permitido ver.
+  const documents = await prisma.document.findMany({
+    where: {
+      AND: [visibleDocumentsWhere(role, session.user.departmentId), { departmentId: department.id }],
+    },
+    orderBy: [{ order: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      category: true,
+      fileName: true,
+      size: true,
+      confidentiality: true,
+    },
+  })
 
   return (
     <div>
@@ -141,6 +160,38 @@ export default async function DepartmentPage({
           )}
         </section>
       </div>
+
+      <section style={{ marginTop: "1rem" }}>
+        <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
+          Documentos ({documents.length})
+        </h2>
+        {documents.length === 0 ? (
+          <div
+            style={{
+              backgroundColor: "var(--crc-white)",
+              borderRadius: 10,
+              padding: "1.5rem",
+              color: "#777",
+              fontSize: "0.85rem",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            }}
+          >
+            Este departamento no tiene documentos disponibles todavía.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: "1rem",
+            }}
+          >
+            {documents.map((doc) => (
+              <DocumentCard key={doc.id} doc={doc} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

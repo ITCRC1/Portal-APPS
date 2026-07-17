@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# documentos internos: se cargan a la base de datos, nunca al repo
+*.docx
+*.doc
+
 # vercel
 .vercel
 

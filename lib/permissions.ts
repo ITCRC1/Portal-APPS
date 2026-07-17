@@ -97,3 +97,49 @@ export function canAccessDepartment(
   if (canViewAllDepartments(role)) return true
   return userDepartmentId === targetDepartmentId
 }
+
+// ---------- Confidencialidad de documentos (PRD 10) ----------
+
+export const CONFIDENTIALITY = {
+  PUBLIC_INTERNAL: "public-internal",
+  DEPARTMENT: "department",
+  EXECUTIVE: "executive",
+  CONFIDENTIAL: "confidential",
+  HIGHLY_CONFIDENTIAL: "highly-confidential",
+} as const
+
+export type Confidentiality = (typeof CONFIDENTIALITY)[keyof typeof CONFIDENTIALITY]
+
+export const CONFIDENTIALITY_LABELS: Record<string, string> = {
+  "public-internal": "Interno público",
+  department: "Solo del departamento",
+  executive: "Solo ejecutivos",
+  confidential: "Confidencial",
+  "highly-confidential": "Altamente confidencial",
+}
+
+/**
+ * ¿Puede el usuario ver/descargar este documento? Se evalúa siempre en el
+ * servidor, antes de entregar metadatos o el archivo (PRD 13). Combina el nivel
+ * de confidencialidad con el alcance por departamento.
+ */
+export function canAccessDocument(
+  role: Role,
+  userDepartmentId: string | null,
+  doc: { confidentiality: string; departmentId: string | null }
+): boolean {
+  // Roles con visión corporativa ven todo.
+  if (canViewAllDepartments(role)) return true
+
+  switch (doc.confidentiality) {
+    // A la mano de todos los usuarios autenticados, sin importar su departamento.
+    case CONFIDENTIALITY.PUBLIC_INTERNAL:
+      return true
+    // Solo su propio departamento.
+    case CONFIDENTIALITY.DEPARTMENT:
+      return doc.departmentId !== null && doc.departmentId === userDepartmentId
+    // Ejecutivo/confidencial: reservado a los roles corporativos (ya retornaron true arriba).
+    default:
+      return false
+  }
+}

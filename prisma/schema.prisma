@@ -83,6 +83,7 @@ model Department {
 
   users User[]
   systemLinks SystemLink[]
+  documents   Document[]
 }
 
 model User {
@@ -102,6 +103,7 @@ model User {
 
   accounts Account[]
   sessions Session[]
+  documents Document[]
 }
 
 model SystemLink {
@@ -117,6 +119,32 @@ model SystemLink {
 
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
+}
+
+// El archivo se guarda en la propia base (columna bytea) en vez de en el disco del
+// contenedor, que se borra en cada deploy. Sirve para documentos corporativos fijos;
+// para subida masiva conviene migrar a un volumen de Railway.
+model Document {
+  id              String      @id @default(cuid())
+  name            String
+  description     String?
+  category        String      @default("Otro")
+  fileName        String
+  mimeType        String
+  size            Int
+  content         Bytes
+  // public-internal | department | executive | confidential | highly-confidential
+  confidentiality String      @default("department")
+  status          String      @default("active")
+  order           Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  uploadedById String?
+  uploadedBy   User?       @relation(fields: [uploadedById], references: [id])
 }
 
 // Ticket de solicitud de cambio de contraseña: el usuario pide, el admin lo resuelve
