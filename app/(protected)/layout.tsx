@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import type { Role } from "@prisma/client"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { TopBar } from "@/components/layout/TopBar"
+import { IdleTimeout } from "@/components/layout/IdleTimeout"
 
 export default async function ProtectedLayout({
   children,
@@ -19,6 +20,7 @@ export default async function ProtectedLayout({
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
+      <IdleTimeout />
       <Sidebar role={role} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <TopBar user={session.user} />

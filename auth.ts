@@ -7,7 +7,10 @@ import { prisma } from "@/lib/prisma"
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   trustHost: true,
-  session: { strategy: "jwt" },
+  // El cierre por inactividad (1 minuto) lo hace <IdleTimeout/> en el cliente, que
+  // se reinicia con la actividad real del usuario. Aquí solo fijamos la vida máxima
+  // absoluta de la sesión (una jornada), para no cortar a quien sí está trabajando.
+  session: { strategy: "jwt", maxAge: 60 * 60 * 8 },
   pages: {
     signIn: "/login",
   },

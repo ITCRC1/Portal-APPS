@@ -19,7 +19,12 @@ export function Sidebar({ role }: Props) {
     <aside
       style={{
         width: 240,
-        minHeight: "100vh",
+        // Se mantiene visible aunque el contenido haga scroll.
+        position: "sticky",
+        top: 0,
+        alignSelf: "flex-start",
+        height: "100vh",
+        overflowY: "auto",
         backgroundColor: "var(--crc-brown-dark)",
         color: "var(--crc-white)",
         display: "flex",

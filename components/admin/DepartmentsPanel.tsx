@@ -26,7 +26,6 @@ import {
 export async function DepartmentsPanel() {
   const departments = await prisma.department.findMany({
     orderBy: { order: "asc" },
-    include: { _count: { select: { users: true, systemLinks: true } } },
   })
 
   return (
@@ -67,10 +66,7 @@ export async function DepartmentsPanel() {
 
       <section style={cardStyle}>
         <h2 style={sectionTitleStyle}>Departamentos ({departments.length})</h2>
-        <p style={sectionHintStyle}>
-          Edita lo que necesites y pulsa Guardar en esa fila. La dirección web (
-          <code>/departments/…</code>) no cambia al renombrar, para no romper enlaces guardados.
-        </p>
+        <p style={sectionHintStyle}>Edita lo que necesites y pulsa Guardar en esa fila.</p>
 
         <table style={tableStyle}>
           <colgroup>
@@ -110,9 +106,6 @@ export async function DepartmentsPanel() {
                       required
                       style={cellInputStyle}
                     />
-                    <div style={{ fontSize: "0.65rem", color: "#aaa", paddingLeft: "0.2rem" }}>
-                      /{d.slug} · {d._count.users} usr · {d._count.systemLinks} enl
-                    </div>
                   </td>
                   <td style={tdStyle}>
                     <input
