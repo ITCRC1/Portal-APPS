@@ -1,6 +1,7 @@
 import { PasswordRequestsPanel } from "@/components/admin/PasswordRequestsPanel"
 import { UsersPanel } from "@/components/admin/UsersPanel"
 import { DepartmentsPanel } from "@/components/admin/DepartmentsPanel"
+import { DocumentsPanel } from "@/components/admin/DocumentsPanel"
 
 export default function AdminPage() {
   return (
@@ -10,13 +11,14 @@ export default function AdminPage() {
           Panel de Administración
         </h1>
         <p style={{ color: "#777" }}>
-          Enlaces, documentos, KPIs, anuncios, alertas y tareas se irán agregando aquí.
+          Enlaces, KPIs, anuncios, alertas y tareas se irán agregando aquí.
         </p>
       </div>
 
       <PasswordRequestsPanel />
       <UsersPanel />
       <DepartmentsPanel />
+      <DocumentsPanel />
     </div>
   )
 }
