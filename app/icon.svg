@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" role="img" aria-label="Hoja">
+  <style>
+    .ink { stroke: #3E2B23; }
+    .fill { fill: #3E2B23; }
+    @media (prefers-color-scheme: dark) {
+      .ink { stroke: #F0E6D8; }
+      .fill { fill: #F0E6D8; }
+    }
+  </style>
+  <g class="ink" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- contorno de la hoja -->
+    <path d="M32 3 C 40 14, 56 26, 57 46 C 57 66, 45 82, 32 93 C 19 82, 7 66, 7 46 C 8 26, 24 14, 32 3 Z"/>
+    <!-- nervadura central con flecha hacia arriba -->
+    <path d="M32 11 L32 86"/>
+    <path d="M27 52 L32 46 L37 52"/>
+    <!-- nervaduras laterales derechas -->
+    <path d="M31 85 C 41 69, 51 59, 51 45"/>
+    <path d="M31 85 C 46 75, 54 65, 53 51"/>
+    <path d="M31 74 C 39 65, 45 58, 46 50"/>
+    <!-- nervaduras laterales izquierdas -->
+    <path d="M33 85 C 23 69, 13 59, 13 45"/>
+    <path d="M33 85 C 18 75, 10 65, 11 51"/>
+    <path d="M33 74 C 25 65, 19 58, 18 50"/>
+  </g>
+  <!-- nodos en la base del tallo -->
+  <g class="fill">
+    <circle cx="12" cy="84" r="2.4"/>
+    <circle cx="52" cy="84" r="2.4"/>
+  </g>
+</svg>
