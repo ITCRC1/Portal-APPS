@@ -1,4 +1,4 @@
-import type { Role } from "@prisma/client"
+import type { Prisma, Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
 import { canViewAllDepartments } from "@/lib/permissions"
@@ -9,6 +9,7 @@ import {
   TASK_STATUSES,
   TASK_PRIORITIES,
   PRIORITY_LABELS,
+  type TaskStatus,
 } from "@/lib/tasks"
 import { createTask } from "@/lib/actions/tasks"
 import { TaskCard } from "@/components/tasks/TaskCard"
@@ -22,15 +23,29 @@ import {
   sectionTitleStyle,
 } from "@/components/admin/styles"
 
-export default async function TasksPage() {
+export default async function TasksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ assignee?: string; status?: string }>
+}) {
   const session = await requireModuleAccess("tasks")
   const role = session.user.role as Role
   const userDepartmentId = session.user.departmentId
   const isCorporate = canViewAllDepartments(role)
 
+  const { assignee, status } = await searchParams
+  const statusFilter = TASK_STATUSES.includes(status as TaskStatus) ? (status as TaskStatus) : null
+
+  // Alcance por departamento + filtros opcionales, todo dentro de la consulta.
+  const where: Prisma.TaskWhereInput = { AND: [visibleTasksWhere(role, userDepartmentId)] }
+  const and = where.AND as Prisma.TaskWhereInput[]
+  if (assignee === "unassigned") and.push({ assignedToId: null })
+  else if (assignee) and.push({ assignedToId: assignee })
+  if (statusFilter) and.push({ status: statusFilter })
+
   const [tasks, departments, assignableUsers] = await Promise.all([
     prisma.task.findMany({
-      where: visibleTasksWhere(role, userDepartmentId),
+      where,
       orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, { order: "asc" }],
       select: {
         id: true,
@@ -40,6 +55,7 @@ export default async function TasksPage() {
         priority: true,
         dueDate: true,
         departmentId: true,
+        assignedToId: true,
         department: { select: { name: true } },
         assignedTo: { select: { fullName: true } },
       },
@@ -57,7 +73,11 @@ export default async function TasksPage() {
     }),
   ])
 
-  const byStatus = (status: string) => tasks.filter((t) => t.status === status)
+  const assignableOptions = assignableUsers.map((u) => ({ id: u.id, name: u.fullName }))
+  const departmentOptions = departments.map((d) => ({ id: d.id, name: d.name }))
+  const byStatus = (s: string) => tasks.filter((t) => t.status === s)
+  const visibleStatuses = statusFilter ? [statusFilter] : TASK_STATUSES
+  const filtersActive = Boolean(assignee || statusFilter)
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -134,6 +154,50 @@ export default async function TasksPage() {
         </form>
       </section>
 
+      <section style={{ ...cardStyle, padding: "1rem 1.25rem" }}>
+        <form
+          method="get"
+          style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "end" }}
+        >
+          <label style={{ ...labelStyle, minWidth: 180 }}>
+            Responsable
+            <select name="assignee" defaultValue={assignee ?? ""} style={inputStyle}>
+              <option value="">Todos</option>
+              <option value="unassigned">Sin asignar</option>
+              {assignableOptions.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label style={{ ...labelStyle, minWidth: 160 }}>
+            Estado
+            <select name="status" defaultValue={statusFilter ?? ""} style={inputStyle}>
+              <option value="">Todos</option>
+              {TASK_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button type="submit" style={{ ...createButtonStyle, padding: "0.55rem 1rem" }}>
+            Filtrar
+          </button>
+          {filtersActive && (
+            <a
+              href="/tasks"
+              style={{ fontSize: "0.85rem", color: "var(--crc-brown)", alignSelf: "center" }}
+            >
+              Limpiar
+            </a>
+          )}
+        </form>
+      </section>
+
       <div
         style={{
           display: "grid",
@@ -142,10 +206,10 @@ export default async function TasksPage() {
           alignItems: "start",
         }}
       >
-        {TASK_STATUSES.map((status) => {
-          const items = byStatus(status)
+        {visibleStatuses.map((s) => {
+          const items = byStatus(s)
           return (
-            <section key={status} style={{ ...cardStyle, padding: "1rem" }}>
+            <section key={s} style={{ ...cardStyle, padding: "1rem" }}>
               <div
                 style={{
                   display: "flex",
@@ -154,7 +218,7 @@ export default async function TasksPage() {
                   marginBottom: "0.75rem",
                 }}
               >
-                <h2 style={{ ...sectionTitleStyle, margin: 0 }}>{STATUS_LABELS[status]}</h2>
+                <h2 style={{ ...sectionTitleStyle, margin: 0 }}>{STATUS_LABELS[s]}</h2>
                 <span style={{ color: "#aaa", fontSize: "0.8rem", fontWeight: 600 }}>{items.length}</span>
               </div>
 
@@ -168,6 +232,9 @@ export default async function TasksPage() {
                       task={task}
                       canModify={canModifyTask(role, userDepartmentId, task.departmentId)}
                       showDepartment={isCorporate}
+                      assignableUsers={assignableOptions}
+                      departments={departmentOptions}
+                      isCorporate={isCorporate}
                     />
                   ))}
                 </div>

@@ -1,5 +1,11 @@
-import { PRIORITY_LABELS, STATUS_LABELS, TASK_STATUSES, type TaskStatus } from "@/lib/tasks"
-import { updateTaskStatus, deleteTask } from "@/lib/actions/tasks"
+import {
+  PRIORITY_LABELS,
+  STATUS_LABELS,
+  TASK_PRIORITIES,
+  TASK_STATUSES,
+  type TaskStatus,
+} from "@/lib/tasks"
+import { updateTaskStatus, updateTask, deleteTask } from "@/lib/actions/tasks"
 
 type TaskCardData = {
   id: string
@@ -8,9 +14,13 @@ type TaskCardData = {
   status: string
   priority: string
   dueDate: Date | null
+  departmentId: string | null
+  assignedToId: string | null
   department: { name: string } | null
   assignedTo: { fullName: string } | null
 }
+
+type Option = { id: string; name: string }
 
 const PRIORITY_COLORS: Record<string, { bg: string; fg: string }> = {
   high: { bg: "#f6e0dd", fg: "#a33" },
@@ -18,8 +28,34 @@ const PRIORITY_COLORS: Record<string, { bg: string; fg: string }> = {
   low: { bg: "#e6f0e0", fg: "var(--crc-green)" },
 }
 
+const smallBtn = {
+  padding: "0.3rem 0.5rem",
+  borderRadius: 6,
+  border: "1px solid var(--crc-brown)",
+  backgroundColor: "var(--crc-white)",
+  color: "var(--crc-brown-dark)",
+  cursor: "pointer",
+  fontSize: "0.72rem",
+  whiteSpace: "nowrap" as const,
+}
+
+const editInput = {
+  width: "100%",
+  minWidth: 0,
+  padding: "0.35rem 0.45rem",
+  borderRadius: 6,
+  border: "1px solid var(--crc-brown)",
+  backgroundColor: "var(--crc-white)",
+  color: "var(--crc-brown-dark)",
+  fontSize: "0.75rem",
+}
+
 function formatDue(date: Date): string {
   return date.toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" })
+}
+
+function dateInputValue(d: Date | null): string {
+  return d ? d.toISOString().slice(0, 10) : ""
 }
 
 function moveButton(status: TaskStatus, taskId: string, label: string) {
@@ -27,19 +63,7 @@ function moveButton(status: TaskStatus, taskId: string, label: string) {
     <form action={updateTaskStatus} style={{ display: "inline" }}>
       <input type="hidden" name="taskId" value={taskId} />
       <input type="hidden" name="status" value={status} />
-      <button
-        type="submit"
-        style={{
-          padding: "0.3rem 0.5rem",
-          borderRadius: 6,
-          border: "1px solid var(--crc-brown)",
-          backgroundColor: "var(--crc-white)",
-          color: "var(--crc-brown-dark)",
-          cursor: "pointer",
-          fontSize: "0.72rem",
-          whiteSpace: "nowrap",
-        }}
-      >
+      <button type="submit" style={smallBtn}>
         {label}
       </button>
     </form>
@@ -50,10 +74,16 @@ export function TaskCard({
   task,
   canModify,
   showDepartment,
+  assignableUsers,
+  departments,
+  isCorporate,
 }: {
   task: TaskCardData
   canModify: boolean
   showDepartment: boolean
+  assignableUsers: Option[]
+  departments: Option[]
+  isCorporate: boolean
 }) {
   const priority = PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.medium
   const idx = TASK_STATUSES.indexOf(task.status as TaskStatus)
@@ -112,27 +142,74 @@ export function TaskCard({
       </div>
 
       {canModify && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.15rem" }}>
-          {prevStatus && moveButton(prevStatus, task.id, `← ${STATUS_LABELS[prevStatus]}`)}
-          {nextStatus && moveButton(nextStatus, task.id, `${STATUS_LABELS[nextStatus]} →`)}
-          <form action={deleteTask} style={{ display: "inline", marginLeft: "auto" }}>
-            <input type="hidden" name="taskId" value={task.id} />
-            <button
-              type="submit"
-              style={{
-                padding: "0.3rem 0.5rem",
-                borderRadius: 6,
-                border: "1px solid #d9b3b3",
-                backgroundColor: "var(--crc-white)",
-                color: "#a33",
-                cursor: "pointer",
-                fontSize: "0.72rem",
-              }}
+        <>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.15rem" }}>
+            {prevStatus && moveButton(prevStatus, task.id, `← ${STATUS_LABELS[prevStatus]}`)}
+            {nextStatus && moveButton(nextStatus, task.id, `${STATUS_LABELS[nextStatus]} →`)}
+            <form action={deleteTask} style={{ display: "inline", marginLeft: "auto" }}>
+              <input type="hidden" name="taskId" value={task.id} />
+              <button
+                type="submit"
+                style={{ ...smallBtn, border: "1px solid #d9b3b3", color: "#a33" }}
+              >
+                Eliminar
+              </button>
+            </form>
+          </div>
+
+          <details>
+            <summary style={{ cursor: "pointer", fontSize: "0.72rem", color: "var(--crc-brown)" }}>
+              Editar
+            </summary>
+            <form
+              action={updateTask}
+              style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem" }}
             >
-              Eliminar
-            </button>
-          </form>
-        </div>
+              <input type="hidden" name="taskId" value={task.id} />
+              <input name="title" defaultValue={task.title} required style={editInput} placeholder="Título" />
+              <input
+                name="description"
+                defaultValue={task.description ?? ""}
+                style={editInput}
+                placeholder="Descripción"
+              />
+              <div style={{ display: "flex", gap: "0.4rem" }}>
+                <select name="priority" defaultValue={task.priority} style={editInput}>
+                  {TASK_PRIORITIES.map((p) => (
+                    <option key={p} value={p}>
+                      {PRIORITY_LABELS[p]}
+                    </option>
+                  ))}
+                </select>
+                <input type="date" name="dueDate" defaultValue={dateInputValue(task.dueDate)} style={editInput} />
+              </div>
+              {isCorporate && (
+                <select name="departmentId" defaultValue={task.departmentId ?? ""} style={editInput}>
+                  <option value="">General (sin departamento)</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <select name="assignedToId" defaultValue={task.assignedToId ?? ""} style={editInput}>
+                <option value="">Sin asignar</option>
+                {assignableUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                style={{ ...smallBtn, backgroundColor: "var(--crc-green)", color: "var(--crc-white)", border: "none", fontWeight: 600 }}
+              >
+                Guardar cambios
+              </button>
+            </form>
+          </details>
+        </>
       )}
     </div>
   )

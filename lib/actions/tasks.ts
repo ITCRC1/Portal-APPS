@@ -157,6 +157,55 @@ export async function updateTaskStatus(formData: FormData) {
   revalidatePath("/tasks")
 }
 
+export async function updateTask(formData: FormData) {
+  const actor = await requireTasksActor()
+  const id = String(formData.get("taskId") ?? "")
+  if (!id) throw new Error("Falta la tarea")
+
+  const current = await requireModifiableTask(actor, id)
+
+  const title = String(formData.get("title") ?? "").trim()
+  if (!title) throw new Error("La tarea necesita un título")
+  const description = String(formData.get("description") ?? "").trim() || null
+
+  const priority = String(formData.get("priority") ?? "medium")
+  if (!TASK_PRIORITIES.includes(priority as (typeof TASK_PRIORITIES)[number])) {
+    throw new Error("Prioridad inválida")
+  }
+
+  const dueRaw = String(formData.get("dueDate") ?? "").trim()
+  const dueDate = dueRaw ? new Date(dueRaw) : null
+  if (dueDate && Number.isNaN(dueDate.getTime())) {
+    throw new Error("Fecha límite inválida")
+  }
+
+  // Solo los roles corporativos pueden mover la tarea a otro departamento; los demás
+  // la mantienen en el suyo (el único que pueden modificar).
+  const departmentId = canViewAllDepartments(actor.role)
+    ? String(formData.get("departmentId") ?? "") || null
+    : current.departmentId
+
+  const assignedToId = await validateAssignee(
+    String(formData.get("assignedToId") ?? "") || null,
+    departmentId
+  )
+
+  const updated = await prisma.task.update({
+    where: { id },
+    data: { title, description, priority, dueDate, departmentId, assignedToId },
+  })
+
+  await recordAudit({
+    action: "updated",
+    entityType: "task",
+    entityId: id,
+    entityLabel: updated.title,
+    details: "editada",
+  })
+
+  revalidatePath("/tasks")
+}
+
 export async function deleteTask(formData: FormData) {
   const actor = await requireTasksActor()
   const id = String(formData.get("taskId") ?? "")
