@@ -7,12 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model HealthCheck {
-  id        String   @id @default(cuid())
-  label     String
-  createdAt DateTime @default(now())
-}
-
 // ---------- Auth.js requerido ----------
 
 model Account {
@@ -237,15 +231,4 @@ model AuditLog {
 
   @@index([createdAt])
   @@index([entityType])
-}
-
-// Ticket de solicitud de cambio de contraseña: el usuario pide, el admin lo resuelve
-// manualmente desde /admin/users (no hay flujo de auto-reset por correo/token).
-model PasswordChangeRequest {
-  id         String    @id @default(cuid())
-  email      String
-  message    String?
-  status     String    @default("pending") // pending | resolved
-  createdAt  DateTime  @default(now())
-  resolvedAt DateTime?
 }

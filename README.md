@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portal Interno · The Costa Rica Collection
 
-## Getting Started
+Intranet corporativa (documentos, tareas, avisos, departamentos, notificaciones y
+bitácora de auditoría) con control de acceso por rol y aislamiento por departamento.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, Server Actions, Turbopack)
+- **Auth.js / NextAuth v5** — credenciales (usuario y contraseña), sesión JWT, hash con argon2
+- **Prisma + PostgreSQL** (Railway)
+
+## Desarrollo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Variables de entorno en `.env` (no se versiona): `DATABASE_URL`, `AUTH_SECRET`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Base de datos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx prisma migrate dev     # aplica migraciones y regenera el cliente
+```
 
-## Learn More
+## Pruebas de autorización
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run test:authz         # Playwright: verifica el aislamiento por rol/departamento
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Seguridad (resumen)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- La autorización se valida **en el servidor** en cada ruta, acción y consulta; nunca solo en la UI.
+- Las consultas por departamento filtran por `departmentId` dentro de la propia consulta.
+- Los documentos internos viven en la base de datos (columna `Bytes`), nunca en el repo.
+- Los secretos son solo del servidor; nunca se exponen con `NEXT_PUBLIC`.
