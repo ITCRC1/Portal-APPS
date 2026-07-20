@@ -4,6 +4,7 @@ import { signOut } from "next-auth/react"
 import type { Role } from "@prisma/client"
 import { ROLE_LABELS } from "@/lib/permissions"
 import { NotificationBell, type NotificationView } from "@/components/layout/NotificationBell"
+import { GlobalSearch } from "@/components/layout/GlobalSearch"
 
 type Props = {
   user?: {
@@ -34,10 +35,11 @@ export function TopBar({ user, notifications = [], unreadCount = 0 }: Props) {
         borderBottom: "1px solid #e5ddd3",
       }}
     >
-      <div style={{ fontSize: "0.85rem", color: "var(--crc-brown-dark)", textTransform: "capitalize" }}>
+      <div style={{ fontSize: "0.85rem", color: "var(--crc-brown-dark)", textTransform: "capitalize", flexShrink: 0 }}>
         {today}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      <GlobalSearch />
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexShrink: 0 }}>
         <NotificationBell notifications={notifications} unreadCount={unreadCount} />
         <div style={{ textAlign: "right" }}>
           <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--crc-brown-dark)" }}>
