@@ -4,6 +4,7 @@ import {
   toggleAnnouncementPinned,
   deleteAnnouncement,
 } from "@/lib/actions/announcements"
+import { ToastForm } from "@/components/ui/ToastForm"
 
 type AnnouncementData = {
   id: string
@@ -112,26 +113,26 @@ export function AnnouncementCard({
 
       {canManage && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.2rem" }}>
-          <form action={toggleAnnouncementPinned}>
+          <ToastForm action={toggleAnnouncementPinned} success="Aviso actualizado">
             <input type="hidden" name="announcementId" value={a.id} />
             <input type="hidden" name="pinned" value={a.pinned ? "false" : "true"} />
             <button type="submit" style={smallBtn}>
               {a.pinned ? "Quitar fijado" : "Fijar"}
             </button>
-          </form>
-          <form action={toggleAnnouncementStatus}>
+          </ToastForm>
+          <ToastForm action={toggleAnnouncementStatus} success="Aviso actualizado">
             <input type="hidden" name="announcementId" value={a.id} />
             <input type="hidden" name="nextStatus" value={archived ? "active" : "archived"} />
             <button type="submit" style={smallBtn}>
               {archived ? "Reactivar" : "Archivar"}
             </button>
-          </form>
-          <form action={deleteAnnouncement} style={{ marginLeft: "auto" }}>
+          </ToastForm>
+          <ToastForm action={deleteAnnouncement} success="Aviso eliminado" style={{ marginLeft: "auto" }}>
             <input type="hidden" name="announcementId" value={a.id} />
             <button type="submit" style={{ ...smallBtn, border: "1px solid #d9b3b3", color: "#a33" }}>
               Eliminar
             </button>
-          </form>
+          </ToastForm>
         </div>
       )}
     </div>

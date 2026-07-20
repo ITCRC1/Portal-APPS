@@ -5,6 +5,7 @@ import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { recordAudit } from "@/lib/audit"
+import { notifyAnnouncementPublished } from "@/lib/notifications"
 import { ANNOUNCEMENT_LEVELS, canPublishAnnouncements } from "@/lib/announcements"
 
 type Publisher = { id: string; role: Role }
@@ -67,6 +68,8 @@ export async function createAnnouncement(formData: FormData) {
     entityLabel: title,
     details: `nivel: ${level}`,
   })
+
+  await notifyAnnouncementPublished({ title, departmentId, publisherId: publisher.id })
 
   revalidatePath("/alerts")
   revalidatePath("/dashboard")

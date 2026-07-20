@@ -6,6 +6,7 @@ import {
   type TaskStatus,
 } from "@/lib/tasks"
 import { updateTaskStatus, updateTask, deleteTask } from "@/lib/actions/tasks"
+import { ToastForm } from "@/components/ui/ToastForm"
 
 type TaskCardData = {
   id: string
@@ -60,13 +61,13 @@ function dateInputValue(d: Date | null): string {
 
 function moveButton(status: TaskStatus, taskId: string, label: string) {
   return (
-    <form action={updateTaskStatus} style={{ display: "inline" }}>
+    <ToastForm action={updateTaskStatus} success="Tarea movida" style={{ display: "inline" }}>
       <input type="hidden" name="taskId" value={taskId} />
       <input type="hidden" name="status" value={status} />
       <button type="submit" style={smallBtn}>
         {label}
       </button>
-    </form>
+    </ToastForm>
   )
 }
 
@@ -146,7 +147,11 @@ export function TaskCard({
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.15rem" }}>
             {prevStatus && moveButton(prevStatus, task.id, `← ${STATUS_LABELS[prevStatus]}`)}
             {nextStatus && moveButton(nextStatus, task.id, `${STATUS_LABELS[nextStatus]} →`)}
-            <form action={deleteTask} style={{ display: "inline", marginLeft: "auto" }}>
+            <ToastForm
+              action={deleteTask}
+              success="Tarea eliminada"
+              style={{ display: "inline", marginLeft: "auto" }}
+            >
               <input type="hidden" name="taskId" value={task.id} />
               <button
                 type="submit"
@@ -154,15 +159,16 @@ export function TaskCard({
               >
                 Eliminar
               </button>
-            </form>
+            </ToastForm>
           </div>
 
           <details>
             <summary style={{ cursor: "pointer", fontSize: "0.72rem", color: "var(--crc-brown)" }}>
               Editar
             </summary>
-            <form
+            <ToastForm
               action={updateTask}
+              success="Cambios guardados"
               style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem" }}
             >
               <input type="hidden" name="taskId" value={task.id} />
@@ -207,7 +213,7 @@ export function TaskCard({
               >
                 Guardar cambios
               </button>
-            </form>
+            </ToastForm>
           </details>
         </>
       )}

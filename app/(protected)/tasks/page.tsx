@@ -13,6 +13,7 @@ import {
 } from "@/lib/tasks"
 import { createTask } from "@/lib/actions/tasks"
 import { TaskCard } from "@/components/tasks/TaskCard"
+import { ToastForm } from "@/components/ui/ToastForm"
 import {
   cardStyle,
   createButtonStyle,
@@ -95,7 +96,7 @@ export default async function TasksPage({
       <section style={cardStyle}>
         <h2 style={sectionTitleStyle}>Nueva tarea</h2>
         <p style={sectionHintStyle}>Se crea en estado &ldquo;Pendiente&rdquo;. El título es obligatorio.</p>
-        <form action={createTask} style={createFormStyle}>
+        <ToastForm action={createTask} success="Tarea creada" style={createFormStyle}>
           <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
             Título
             <input name="title" required placeholder="¿Qué hay que hacer?" style={inputStyle} />
@@ -151,7 +152,7 @@ export default async function TasksPage({
           <button type="submit" style={createButtonStyle}>
             Crear tarea
           </button>
-        </form>
+        </ToastForm>
       </section>
 
       <section style={{ ...cardStyle, padding: "1rem 1.25rem" }}>

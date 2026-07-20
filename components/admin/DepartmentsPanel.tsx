@@ -4,6 +4,7 @@ import {
   updateDepartment,
   toggleDepartmentStatus,
 } from "@/lib/actions/departments"
+import { ToastForm } from "@/components/ui/ToastForm"
 import {
   badgeStyle,
   cardStyle,
@@ -32,7 +33,7 @@ export async function DepartmentsPanel() {
     <>
       <section style={cardStyle}>
         <h2 style={{ ...sectionTitleStyle, marginBottom: "1rem" }}>Crear departamento</h2>
-        <form action={createDepartment} style={createFormStyle}>
+        <ToastForm action={createDepartment} success="Departamento creado" style={createFormStyle}>
           <label style={labelStyle}>
             Nombre
             <input name="name" required placeholder="Ej: Revenue Management" style={inputStyle} />
@@ -61,7 +62,7 @@ export async function DepartmentsPanel() {
           <button type="submit" style={createButtonStyle}>
             Crear departamento
           </button>
-        </form>
+        </ToastForm>
       </section>
 
       <section style={cardStyle}>
@@ -148,21 +149,21 @@ export async function DepartmentsPanel() {
                     <span style={badgeStyle(isActive)}>{isActive ? "Activo" : "Inactivo"}</span>
                   </td>
                   <td style={tdStyle}>
-                    <form id={editFormId} action={updateDepartment}>
+                    <ToastForm id={editFormId} action={updateDepartment} success="Departamento actualizado">
                       <input type="hidden" name="departmentId" value={d.id} />
                       <button type="submit" style={primaryButtonStyle}>
                         Guardar
                       </button>
-                    </form>
+                    </ToastForm>
                   </td>
                   <td style={tdStyle}>
-                    <form action={toggleDepartmentStatus}>
+                    <ToastForm action={toggleDepartmentStatus} success="Estado actualizado">
                       <input type="hidden" name="departmentId" value={d.id} />
                       <input type="hidden" name="nextStatus" value={isActive ? "inactive" : "active"} />
                       <button type="submit" style={{ ...outlineButtonStyle, width: "100%" }}>
                         {isActive ? "Desactivar" : "Activar"}
                       </button>
-                    </form>
+                    </ToastForm>
                   </td>
                 </tr>
               )

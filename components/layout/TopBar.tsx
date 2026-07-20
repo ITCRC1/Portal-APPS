@@ -3,6 +3,7 @@
 import { signOut } from "next-auth/react"
 import type { Role } from "@prisma/client"
 import { ROLE_LABELS } from "@/lib/permissions"
+import { NotificationBell, type NotificationView } from "@/components/layout/NotificationBell"
 
 type Props = {
   user?: {
@@ -10,9 +11,11 @@ type Props = {
     email?: string | null
     role?: string
   }
+  notifications?: NotificationView[]
+  unreadCount?: number
 }
 
-export function TopBar({ user }: Props) {
+export function TopBar({ user, notifications = [], unreadCount = 0 }: Props) {
   const today = new Date().toLocaleDateString("es-CR", {
     weekday: "long",
     year: "numeric",
@@ -35,6 +38,7 @@ export function TopBar({ user }: Props) {
         {today}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <NotificationBell notifications={notifications} unreadCount={unreadCount} />
         <div style={{ textAlign: "right" }}>
           <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--crc-brown-dark)" }}>
             {user?.name}

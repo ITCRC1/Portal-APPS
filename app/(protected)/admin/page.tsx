@@ -1,4 +1,3 @@
-import { PasswordRequestsPanel } from "@/components/admin/PasswordRequestsPanel"
 import { UsersPanel } from "@/components/admin/UsersPanel"
 import { DepartmentsPanel } from "@/components/admin/DepartmentsPanel"
 import { DocumentsPanel } from "@/components/admin/DocumentsPanel"
@@ -16,7 +15,6 @@ export default function AdminPage() {
         </p>
       </div>
 
-      <PasswordRequestsPanel />
       <UsersPanel />
       <DepartmentsPanel />
       <DocumentsPanel />

@@ -5,6 +5,7 @@ import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { recordAudit } from "@/lib/audit"
+import { notifyUser } from "@/lib/notifications"
 import { canAccessModule, canViewAllDepartments } from "@/lib/permissions"
 import {
   TASK_STATUSES,
@@ -116,6 +117,17 @@ export async function createTask(formData: FormData) {
     entityLabel: title,
   })
 
+  // Notifica al responsable (salvo que se la asigne a sí mismo).
+  if (assignedToId && assignedToId !== actor.id) {
+    await notifyUser({
+      userId: assignedToId,
+      type: "task-assigned",
+      title: "Nueva tarea asignada",
+      body: title,
+      link: "/tasks",
+    })
+  }
+
   revalidatePath("/tasks")
 }
 
@@ -163,6 +175,7 @@ export async function updateTask(formData: FormData) {
   if (!id) throw new Error("Falta la tarea")
 
   const current = await requireModifiableTask(actor, id)
+  const before = await prisma.task.findUnique({ where: { id }, select: { assignedToId: true } })
 
   const title = String(formData.get("title") ?? "").trim()
   if (!title) throw new Error("La tarea necesita un título")
@@ -202,6 +215,17 @@ export async function updateTask(formData: FormData) {
     entityLabel: updated.title,
     details: "editada",
   })
+
+  // Notifica si se asignó a un responsable nuevo (distinto del anterior y del editor).
+  if (assignedToId && assignedToId !== before?.assignedToId && assignedToId !== actor.id) {
+    await notifyUser({
+      userId: assignedToId,
+      type: "task-assigned",
+      title: "Se te asignó una tarea",
+      body: updated.title,
+      link: "/tasks",
+    })
+  }
 
   revalidatePath("/tasks")
 }

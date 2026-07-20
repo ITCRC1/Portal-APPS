@@ -109,6 +109,7 @@ model User {
   assignedTasks Task[] @relation("AssignedTasks")
   createdTasks  Task[] @relation("CreatedTasks")
   announcements Announcement[] @relation("PublishedAnnouncements")
+  notifications Notification[]
 }
 
 model SystemLink {
@@ -196,6 +197,24 @@ model Announcement {
 
   publishedById String?
   publishedBy   User?    @relation("PublishedAnnouncements", fields: [publishedById], references: [id])
+}
+
+// Notificación personal (centro de notificaciones / campana). Una fila por
+// destinatario; se genera al asignar una tarea o publicar un aviso de su alcance.
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // task-assigned | announcement
+  title     String
+  body      String?
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }
 
 // Bitácora de auditoría: registra quién hizo qué sobre usuarios, departamentos,

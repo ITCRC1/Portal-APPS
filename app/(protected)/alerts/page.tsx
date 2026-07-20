@@ -9,6 +9,7 @@ import {
 } from "@/lib/announcements"
 import { createAnnouncement } from "@/lib/actions/announcements"
 import { AnnouncementCard } from "@/components/announcements/AnnouncementCard"
+import { ToastForm } from "@/components/ui/ToastForm"
 import {
   cardStyle,
   createButtonStyle,
@@ -66,7 +67,7 @@ export default async function AlertsPage() {
         <section style={cardStyle}>
           <h2 style={sectionTitleStyle}>Nuevo aviso</h2>
           <p style={sectionHintStyle}>El título y el mensaje son obligatorios.</p>
-          <form action={createAnnouncement} style={createFormStyle}>
+          <ToastForm action={createAnnouncement} success="Aviso publicado" style={createFormStyle}>
             <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
               Título
               <input name="title" required placeholder="Asunto del aviso" style={inputStyle} />
@@ -119,7 +120,7 @@ export default async function AlertsPage() {
             <button type="submit" style={createButtonStyle}>
               Publicar aviso
             </button>
-          </form>
+          </ToastForm>
         </section>
       )}
 

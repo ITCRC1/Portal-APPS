@@ -2,6 +2,7 @@ import { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { ROLE_LABELS } from "@/lib/permissions"
 import { createUser, updateUser, toggleUserActive } from "@/lib/actions/users"
+import { ToastForm } from "@/components/ui/ToastForm"
 import {
   badgeStyle,
   cardStyle,
@@ -33,7 +34,7 @@ export async function UsersPanel() {
     <>
       <section style={cardStyle}>
         <h2 style={{ ...sectionTitleStyle, marginBottom: "1rem" }}>Crear usuario</h2>
-        <form action={createUser} style={createFormStyle}>
+        <ToastForm action={createUser} success="Usuario creado" style={createFormStyle}>
           <label style={labelStyle}>
             Nombre completo
             <input name="fullName" required style={inputStyle} />
@@ -81,7 +82,7 @@ export async function UsersPanel() {
           <button type="submit" style={createButtonStyle}>
             Crear usuario
           </button>
-        </form>
+        </ToastForm>
       </section>
 
       <section style={cardStyle}>
@@ -183,21 +184,21 @@ export async function UsersPanel() {
                     />
                   </td>
                   <td style={tdStyle}>
-                    <form id={editFormId} action={updateUser}>
+                    <ToastForm id={editFormId} action={updateUser} success="Usuario actualizado">
                       <input type="hidden" name="userId" value={u.id} />
                       <button type="submit" style={primaryButtonStyle}>
                         Guardar
                       </button>
-                    </form>
+                    </ToastForm>
                   </td>
                   <td style={tdStyle}>
-                    <form action={toggleUserActive}>
+                    <ToastForm action={toggleUserActive} success="Estado actualizado">
                       <input type="hidden" name="userId" value={u.id} />
                       <input type="hidden" name="nextActive" value={(!u.isActive).toString()} />
                       <button type="submit" style={{ ...outlineButtonStyle, width: "100%" }}>
                         {u.isActive ? "Desactivar" : "Activar"}
                       </button>
-                    </form>
+                    </ToastForm>
                   </td>
                 </tr>
               )

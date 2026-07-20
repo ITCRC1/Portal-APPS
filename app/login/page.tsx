@@ -4,7 +4,6 @@ import { useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
 import Image from "next/image"
-import Link from "next/link"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -157,13 +156,9 @@ export default function LoginPage() {
               {loading ? "Ingresando..." : "Ingresar"}
             </button>
 
-            <Link
-              href="/forgot-password"
-              className="text-center text-sm underline"
-              style={{ color: "var(--crc-brown)" }}
-            >
-              ¿Olvidaste tu contraseña?
-            </Link>
+            <p className="text-center text-xs opacity-70" style={{ color: "var(--crc-brown)" }}>
+              ¿Problemas para ingresar? Contacta al administrador.
+            </p>
           </div>
         </form>
 

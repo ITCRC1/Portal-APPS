@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { CONFIDENTIALITY_LABELS } from "@/lib/permissions"
 import { createDocument, toggleDocumentStatus, deleteDocument } from "@/lib/actions/documents"
+import { ToastForm } from "@/components/ui/ToastForm"
 import {
   badgeStyle,
   cardStyle,
@@ -63,7 +64,7 @@ export async function DocumentsPanel() {
         <p style={sectionHintStyle}>
           Solo administradores pueden subir. PDF, Word, Excel, PowerPoint, imágenes o texto, hasta 15 MB.
         </p>
-        <form action={createDocument} style={createFormStyle}>
+        <ToastForm action={createDocument} success="Documento subido" error="No se pudo subir el documento" style={createFormStyle}>
           <label style={labelStyle}>
             Archivo
             <input
@@ -122,7 +123,7 @@ export async function DocumentsPanel() {
           <button type="submit" style={createButtonStyle}>
             Subir documento
           </button>
-        </form>
+        </ToastForm>
       </section>
 
       <section style={cardStyle}>
@@ -189,16 +190,16 @@ export async function DocumentsPanel() {
                       </a>
                     </td>
                     <td style={tdStyle}>
-                      <form action={toggleDocumentStatus}>
+                      <ToastForm action={toggleDocumentStatus} success="Documento actualizado">
                         <input type="hidden" name="documentId" value={d.id} />
                         <input type="hidden" name="nextStatus" value={isActive ? "inactive" : "active"} />
                         <button type="submit" style={{ ...outlineButtonStyle, width: "100%" }}>
                           {isActive ? "Ocultar" : "Mostrar"}
                         </button>
-                      </form>
+                      </ToastForm>
                     </td>
                     <td style={tdStyle}>
-                      <form action={deleteDocument}>
+                      <ToastForm action={deleteDocument} success="Documento eliminado">
                         <input type="hidden" name="documentId" value={d.id} />
                         <button
                           type="submit"
@@ -206,7 +207,7 @@ export async function DocumentsPanel() {
                         >
                           Eliminar
                         </button>
-                      </form>
+                      </ToastForm>
                     </td>
                   </tr>
                 )
