@@ -1,7 +1,7 @@
 import { UsersPanel } from "@/components/admin/UsersPanel"
 import { DepartmentsPanel } from "@/components/admin/DepartmentsPanel"
 import { DocumentsPanel } from "@/components/admin/DocumentsPanel"
-import { AuditLogPanel } from "@/components/admin/AuditLogPanel"
+import { AuditExport } from "@/components/admin/AuditExport"
 
 export default function AdminPage() {
   return (
@@ -18,7 +18,7 @@ export default function AdminPage() {
       <UsersPanel />
       <DepartmentsPanel />
       <DocumentsPanel />
-      <AuditLogPanel />
+      <AuditExport />
     </div>
   )
 }
