@@ -54,11 +54,6 @@ export async function DepartmentsPanel() {
             <input name="ownerName" placeholder="Nombre del encargado" style={inputStyle} />
           </label>
 
-          <label style={labelStyle}>
-            Correo del responsable
-            <input type="email" name="ownerEmail" placeholder="nombre@empresa.com" style={inputStyle} />
-          </label>
-
           <button type="submit" style={createButtonStyle}>
             Crear departamento
           </button>
@@ -71,13 +66,12 @@ export async function DepartmentsPanel() {
 
         <table style={tableStyle}>
           <colgroup>
-            <col style={{ width: "16%" }} />
+            <col style={{ width: "18%" }} />
             <col style={{ width: "6%" }} />
-            <col style={{ width: "23%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "15%" }} />
-            <col style={{ width: "7%" }} />
-            <col style={{ width: "9%" }} />
+            <col style={{ width: "30%" }} />
+            <col style={{ width: "18%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "10%" }} />
             <col style={{ width: "10%" }} />
           </colgroup>
           <thead>
@@ -86,7 +80,6 @@ export async function DepartmentsPanel() {
               <th style={thStyle}>Ícono</th>
               <th style={thStyle}>Descripción</th>
               <th style={thStyle}>Responsable</th>
-              <th style={thStyle}>Correo</th>
               <th style={thStyle}>Estado</th>
               <th style={thStyle}></th>
               <th style={thStyle}></th>
@@ -131,17 +124,6 @@ export async function DepartmentsPanel() {
                       name="ownerName"
                       defaultValue={d.ownerName ?? ""}
                       placeholder="Sin asignar"
-                      style={cellInputStyle}
-                    />
-                  </td>
-                  <td style={tdStyle}>
-                    <input
-                      form={editFormId}
-                      type="email"
-                      name="ownerEmail"
-                      defaultValue={d.ownerEmail ?? ""}
-                      placeholder="Sin correo"
-                      title={d.ownerEmail ?? ""}
                       style={cellInputStyle}
                     />
                   </td>

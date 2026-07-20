@@ -75,7 +75,7 @@ export default async function DepartmentPage({
       <p style={{ color: "#777", marginBottom: "0.5rem" }}>{department.description}</p>
       <p style={{ color: "#999", fontSize: "0.85rem", marginBottom: "2rem" }}>
         {department.ownerName
-          ? `Responsable: ${department.ownerName}${department.ownerEmail ? ` · ${department.ownerEmail}` : ""}`
+          ? `Responsable: ${department.ownerName}`
           : "Sin responsable asignado"}
       </p>
 

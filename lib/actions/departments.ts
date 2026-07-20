@@ -31,7 +31,6 @@ export async function createDepartment(formData: FormData) {
   const description = String(formData.get("description") ?? "").trim() || null
   const icon = String(formData.get("icon") ?? "").trim() || null
   const ownerName = String(formData.get("ownerName") ?? "").trim() || null
-  const ownerEmail = String(formData.get("ownerEmail") ?? "").trim().toLowerCase() || null
 
   if (!name) {
     throw new Error("El nombre es obligatorio")
@@ -56,7 +55,6 @@ export async function createDepartment(formData: FormData) {
       description,
       icon,
       ownerName,
-      ownerEmail,
       order: (last?.order ?? 0) + 1,
     },
   })
@@ -80,7 +78,6 @@ export async function updateDepartment(formData: FormData) {
   const description = String(formData.get("description") ?? "").trim() || null
   const icon = String(formData.get("icon") ?? "").trim() || null
   const ownerName = String(formData.get("ownerName") ?? "").trim() || null
-  const ownerEmail = String(formData.get("ownerEmail") ?? "").trim().toLowerCase() || null
 
   if (!id) {
     throw new Error("Falta el departamento")
@@ -94,7 +91,7 @@ export async function updateDepartment(formData: FormData) {
   // rompería los enlaces que la gente ya tenga guardados.
   await prisma.department.update({
     where: { id },
-    data: { name, description, icon, ownerName, ownerEmail },
+    data: { name, description, icon, ownerName },
   })
 
   await recordAudit({
