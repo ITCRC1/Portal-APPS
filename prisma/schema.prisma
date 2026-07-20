@@ -100,6 +100,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Anti fuerza bruta: se bloquea la cuenta unos minutos tras varios intentos fallidos.
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
 

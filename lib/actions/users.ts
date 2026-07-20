@@ -6,6 +6,11 @@ import { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { recordAudit } from "@/lib/audit"
+import { emailProblem } from "@/lib/email"
+
+// Resultado de validación que ToastForm muestra al admin como mensaje de error.
+type ActionError = { ok: false; message: string }
+const fail = (message: string): ActionError => ({ ok: false, message })
 
 async function requireSuperAdmin() {
   const session = await auth()
@@ -25,16 +30,25 @@ export async function createUser(formData: FormData) {
   const departmentId = String(formData.get("departmentId") ?? "") || null
 
   if (!fullName || !email || !password) {
-    throw new Error("Nombre, correo y contraseña son obligatorios")
+    return fail("Nombre, correo y contraseña son obligatorios")
+  }
+
+  if (password.length < 8) {
+    return fail("La contraseña debe tener al menos 8 caracteres")
   }
 
   if (!Object.values(Role).includes(roleValue as Role)) {
-    throw new Error("Rol inválido")
+    return fail("Rol inválido")
+  }
+
+  const badEmail = await emailProblem(email)
+  if (badEmail) {
+    return fail(badEmail)
   }
 
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
-    throw new Error("Ese correo ya está registrado")
+    return fail("Ese correo ya está registrado")
   }
 
   const passwordHash = await argon2.hash(password)
@@ -75,16 +89,25 @@ export async function updateUser(formData: FormData) {
   }
 
   if (!fullName || !email) {
-    throw new Error("Nombre y correo son obligatorios")
+    return fail("Nombre y correo son obligatorios")
+  }
+
+  if (password && password.length < 8) {
+    return fail("La contraseña debe tener al menos 8 caracteres")
   }
 
   if (!Object.values(Role).includes(roleValue as Role)) {
-    throw new Error("Rol inválido")
+    return fail("Rol inválido")
+  }
+
+  const badEmail = await emailProblem(email)
+  if (badEmail) {
+    return fail(badEmail)
   }
 
   const emailOwner = await prisma.user.findUnique({ where: { email } })
   if (emailOwner && emailOwner.id !== userId) {
-    throw new Error("Ese correo ya está en uso por otro usuario")
+    return fail("Ese correo ya está en uso por otro usuario")
   }
 
   await prisma.user.update({
@@ -94,8 +117,11 @@ export async function updateUser(formData: FormData) {
       email,
       role: roleValue as Role,
       departmentId,
-      // Campo de clave vacío = se conserva la contraseña actual.
-      ...(password ? { passwordHash: await argon2.hash(password) } : {}),
+      // Campo de clave vacío = se conserva la contraseña actual. Al cambiarla,
+      // se desbloquea la cuenta (útil cuando el usuario olvidó la clave).
+      ...(password
+        ? { passwordHash: await argon2.hash(password), failedLoginAttempts: 0, lockedUntil: null }
+        : {}),
     },
   })
 
@@ -105,6 +131,31 @@ export async function updateUser(formData: FormData) {
     entityId: userId,
     entityLabel: `${fullName} <${email}>`,
     details: password ? "incluye cambio de contraseña" : null,
+  })
+
+  revalidatePath("/admin")
+}
+
+// Quita el bloqueo por intentos fallidos de forma inmediata (lo usa el admin).
+export async function unlockUser(formData: FormData) {
+  await requireSuperAdmin()
+
+  const userId = String(formData.get("userId") ?? "")
+  if (!userId) {
+    throw new Error("Falta el usuario")
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { failedLoginAttempts: 0, lockedUntil: null },
+  })
+
+  await recordAudit({
+    action: "updated",
+    entityType: "user",
+    entityId: userId,
+    entityLabel: `${updated.fullName} <${updated.email}>`,
+    details: "desbloqueado",
   })
 
   revalidatePath("/admin")

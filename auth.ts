@@ -1,11 +1,14 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import argon2 from "argon2"
 import { prisma } from "@/lib/prisma"
 
+// Anti fuerza bruta: tras MAX_ATTEMPTS fallos seguidos, la cuenta se bloquea
+// LOCK_MINUTES; luego se desbloquea sola. El admin puede desbloquear antes.
+const MAX_ATTEMPTS = 5
+const LOCK_MINUTES = 15
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   trustHost: true,
   // El cierre por inactividad (1 minuto) lo hace <IdleTimeout/> en el cliente, que
   // se reinicia con la actividad real del usuario. Aquí solo fijamos la vida máxima
@@ -24,17 +27,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+          where: { email: (credentials.email as string).toLowerCase() },
         })
 
         if (!user || !user.isActive) return null
 
-        const isValid = await argon2.verify(
-          user.passwordHash,
-          credentials.password as string
-        )
+        // Cuenta bloqueada por intentos: no entra aunque la clave sea correcta.
+        if (user.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
+          return null
+        }
 
-        if (!isValid) return null
+        const isValid = await argon2.verify(user.passwordHash, credentials.password as string)
+
+        if (!isValid) {
+          const attempts = user.failedLoginAttempts + 1
+          const shouldLock = attempts >= MAX_ATTEMPTS
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              // Al bloquear, reinicia el contador para dar otra tanda tras el desbloqueo.
+              failedLoginAttempts: shouldLock ? 0 : attempts,
+              lockedUntil: shouldLock ? new Date(Date.now() + LOCK_MINUTES * 60_000) : user.lockedUntil,
+            },
+          })
+          return null
+        }
+
+        // Éxito: limpia contador y bloqueo si venían de intentos previos.
+        if (user.failedLoginAttempts !== 0 || user.lockedUntil) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { failedLoginAttempts: 0, lockedUntil: null },
+          })
+        }
 
         return {
           id: user.id,
@@ -49,8 +74,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as any).role
-        token.departmentId = (user as any).departmentId
+        token.role = (user as { role?: string }).role
+        token.departmentId = (user as { departmentId?: string | null }).departmentId
       }
       return token
     },

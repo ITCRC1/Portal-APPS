@@ -28,8 +28,18 @@ export default async function ProtectedLayout({
     redirect("/login")
   }
 
-  const role = session.user.role as Role
   const userId = session.user.id
+
+  // Re-valida contra la base: un usuario desactivado no debe ver nada del portal,
+  // aunque su token siga vigente.
+  const dbUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isActive: true, role: true },
+  })
+  if (!dbUser || !dbUser.isActive) {
+    redirect("/login")
+  }
+  const role = dbUser.role as Role
 
   const [rawNotifications, unreadCount] = await Promise.all([
     prisma.notification.findMany({

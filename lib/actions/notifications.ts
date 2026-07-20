@@ -12,14 +12,27 @@ async function requireUserId(): Promise<string> {
   return id
 }
 
-// Marca una notificación como leída y navega a su enlace (si tiene). Filtra por
-// userId para que nadie marque notificaciones ajenas.
+// Marca una notificación como leída y navega a su enlace. El destino se toma de la
+// propia notificación en la base (no del formulario) y se valida que sea una ruta
+// interna, para no abrir un redirect a un sitio externo. Filtra por userId para que
+// nadie toque notificaciones ajenas.
 export async function openNotification(formData: FormData) {
   const userId = await requireUserId()
   const id = String(formData.get("id") ?? "")
-  const link = String(formData.get("link") ?? "") || "/dashboard"
+
+  let link = "/dashboard"
   if (id) {
-    await prisma.notification.updateMany({ where: { id, userId }, data: { read: true } })
+    const notification = await prisma.notification.findFirst({
+      where: { id, userId },
+      select: { link: true },
+    })
+    if (notification) {
+      await prisma.notification.update({ where: { id }, data: { read: true } })
+      // Solo rutas internas ("/algo"); nunca "//host" ni URLs absolutas.
+      if (notification.link && /^\/(?!\/)/.test(notification.link)) {
+        link = notification.link
+      }
+    }
   }
   redirect(link)
 }

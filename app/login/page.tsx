@@ -27,7 +27,9 @@ export default function LoginPage() {
     setLoading(false)
 
     if (result?.error) {
-      setError("Correo o contraseña incorrectos")
+      setError(
+        "Correo o contraseña incorrectos. Tras varios intentos la cuenta se bloquea unos minutos; si te pasa, espera o contacta al administrador."
+      )
       return
     }
 

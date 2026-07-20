@@ -1,7 +1,7 @@
 import { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { ROLE_LABELS } from "@/lib/permissions"
-import { createUser, updateUser, toggleUserActive } from "@/lib/actions/users"
+import { createUser, updateUser, toggleUserActive, unlockUser } from "@/lib/actions/users"
 import { ToastForm } from "@/components/ui/ToastForm"
 import {
   badgeStyle,
@@ -121,11 +121,12 @@ export async function UsersPanel() {
               // Un <form> no puede envolver varias celdas, así que los campos se asocian
               // al formulario de su fila con el atributo form.
               const editFormId = `edit-user-${u.id}`
+              const isLocked = u.lockedUntil ? u.lockedUntil.getTime() > Date.now() : false
 
               return (
                 // defaultValue solo aplica al montar: sin updatedAt en la key, tras guardar
                 // los campos seguirían mostrando el valor anterior.
-                <tr key={`${u.id}-${u.updatedAt.toISOString()}`} style={tbodyRowStyle}>
+                <tr key={`${u.id}-${u.updatedAt.toISOString()}`} data-testid={`user-row-${u.id}`} style={tbodyRowStyle}>
                   <td style={tdStyle}>
                     <input
                       form={editFormId}
@@ -172,6 +173,11 @@ export async function UsersPanel() {
                   </td>
                   <td style={tdStyle}>
                     <span style={badgeStyle(u.isActive)}>{u.isActive ? "Activo" : "Inactivo"}</span>
+                    {isLocked && (
+                      <div style={{ fontSize: "0.65rem", color: "#a33", marginTop: "0.2rem", whiteSpace: "nowrap" }}>
+                        🔒 Bloqueado
+                      </div>
+                    )}
                   </td>
                   <td style={tdStyle}>
                     <input
@@ -192,13 +198,26 @@ export async function UsersPanel() {
                     </ToastForm>
                   </td>
                   <td style={tdStyle}>
-                    <ToastForm action={toggleUserActive} success="Estado actualizado">
-                      <input type="hidden" name="userId" value={u.id} />
-                      <input type="hidden" name="nextActive" value={(!u.isActive).toString()} />
-                      <button type="submit" style={{ ...outlineButtonStyle, width: "100%" }}>
-                        {u.isActive ? "Desactivar" : "Activar"}
-                      </button>
-                    </ToastForm>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                      <ToastForm action={toggleUserActive} success="Estado actualizado">
+                        <input type="hidden" name="userId" value={u.id} />
+                        <input type="hidden" name="nextActive" value={(!u.isActive).toString()} />
+                        <button type="submit" style={{ ...outlineButtonStyle, width: "100%" }}>
+                          {u.isActive ? "Desactivar" : "Activar"}
+                        </button>
+                      </ToastForm>
+                      {isLocked && (
+                        <ToastForm action={unlockUser} success="Cuenta desbloqueada">
+                          <input type="hidden" name="userId" value={u.id} />
+                          <button
+                            type="submit"
+                            style={{ ...outlineButtonStyle, width: "100%", borderColor: "var(--crc-green)", color: "var(--crc-green)" }}
+                          >
+                            Desbloquear
+                          </button>
+                        </ToastForm>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )
