@@ -215,12 +215,27 @@ button:not(:disabled):active {
   }
 
   /* Tablas anchas del panel de admin: el scroll horizontal queda dentro del
-     contenedor, nunca en la página completa. */
+     contenedor, nunca en la página completa. El min-width da a cada columna
+     (incluidos los botones de acción como "Desactivar") ancho suficiente para
+     que el texto no se salga del botón. */
   .crc-table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
   .crc-table-wrap table {
-    min-width: 640px;
+    min-width: 900px;
+  }
+
+  /* Menú de la campana de notificaciones: en escritorio es un desplegable de 340px
+     anclado a la derecha; en móvil eso se sale de la pantalla, así que lo pasamos a
+     un panel fijo que ocupa casi todo el ancho, debajo de la barra superior.
+     Se usa !important porque los valores de posición vienen en estilos inline. */
+  .crc-notif-panel {
+    position: fixed !important;
+    top: 60px !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-height: 75vh !important;
   }
 }

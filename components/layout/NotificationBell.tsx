@@ -76,6 +76,7 @@ export function NotificationBell({
             style={{ position: "fixed", inset: 0, zIndex: 40 }}
           />
           <div
+            className="crc-notif-panel"
             style={{
               position: "absolute",
               top: "calc(100% + 8px)",
