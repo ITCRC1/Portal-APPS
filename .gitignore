@@ -49,3 +49,14 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# RuFlo / Claude Flow — instalación LOCAL de desarrollo, NO versionar.
+# Es una herramienta personal; no debe subirse al repo ni desplegarse a Railway.
+# Para eliminarla al terminar el proyecto, borra estas carpetas/archivos.
+.claude/
+.claude-flow/
+.swarm/
+.mcp.json
+ruvector.db
+*.db-shm
+*.db-wal
