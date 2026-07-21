@@ -40,7 +40,7 @@ export default async function DocumentsPage() {
             padding: "2rem",
             textAlign: "center",
             color: "#777",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            border: "1px solid var(--crc-border)",
           }}
         >
           No hay documentos disponibles para ti todavía.

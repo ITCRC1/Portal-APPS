@@ -23,7 +23,12 @@
   --crc-panel: #FBF8F3;    /* fondo de campos/sutil */
   --crc-danger: #A6402F;   /* rojos (vencido, eliminar) */
 
-  --background: var(--crc-sand);
+  /* Fondo grande de las páginas: más claro y menos saturado que el arena, para no
+     cansar la vista. El arena (--crc-sand) se reserva para acentos pequeños
+     (chips de íconos, buscador, estado activo). */
+  --crc-bg: #F7F3EC;
+
+  --background: var(--crc-bg);
   --foreground: var(--crc-brown-dark);
 }
 
@@ -45,6 +50,7 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  line-height: 1.5;
 }
 
 /* Foco accesible y coherente en todo el portal (no se define inline, así que gana). */

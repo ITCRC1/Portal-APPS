@@ -41,7 +41,7 @@ export default async function DepartmentsPage() {
             padding: "2rem",
             textAlign: "center",
             color: "#777",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            border: "1px solid var(--crc-border)",
           }}
         >
           No tienes un departamento asignado todavía. Pídele a un administrador que te asigne uno.
@@ -64,7 +64,7 @@ export default async function DepartmentsPage() {
                 backgroundColor: "var(--crc-white)",
                 borderRadius: 10,
                 padding: "1.25rem",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                border: "1px solid var(--crc-border)",
               }}
             >
               <div style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>{d.icon}</div>

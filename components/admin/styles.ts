@@ -2,9 +2,10 @@ import type { CSSProperties } from "react"
 
 export const cardStyle: CSSProperties = {
   backgroundColor: "var(--crc-white)",
-  borderRadius: 10,
+  borderRadius: 12,
   padding: "1.5rem",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+  // Borde tenue en vez de sombra: separa sin recargar (menos cansancio visual).
+  border: "1px solid var(--crc-border)",
 }
 
 export const sectionTitleStyle: CSSProperties = {

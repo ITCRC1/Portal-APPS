@@ -99,10 +99,9 @@ export function TaskCard({
       style={{
         backgroundColor: "var(--crc-white)",
         borderRadius: 8,
-        border: "1px solid #eee3d6",
+        border: "1px solid var(--crc-border)",
         borderLeft: `4px solid ${priority.fg}`,
         padding: "0.7rem 0.8rem",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
         display: "flex",
         flexDirection: "column",
         gap: "0.4rem",

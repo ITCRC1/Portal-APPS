@@ -54,7 +54,7 @@ export default async function SystemLinksPage() {
                 backgroundColor: "var(--crc-white)",
                 borderRadius: 10,
                 padding: "1.25rem",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                border: "1px solid var(--crc-border)",
                 transition: "transform 0.15s",
               }}
             >

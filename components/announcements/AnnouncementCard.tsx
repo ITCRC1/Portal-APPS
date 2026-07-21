@@ -58,10 +58,9 @@ export function AnnouncementCard({
       style={{
         backgroundColor: "var(--crc-white)",
         borderRadius: 10,
-        border: "1px solid #eee3d6",
+        border: "1px solid var(--crc-border)",
         borderLeft: `5px solid ${c.border}`,
         padding: "1rem 1.1rem",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
         opacity: archived || expired ? 0.6 : 1,
         display: "flex",
         flexDirection: "column",

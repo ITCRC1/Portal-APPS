@@ -11,8 +11,9 @@ const cardStyle = {
   backgroundColor: "var(--crc-white)",
   borderRadius: 12,
   padding: "1.25rem",
+  // Solo borde tenue, sin sombra: interfaz más calmada (la elevación se reserva
+  // para el hover de las tarjetas clicables, vía .crc-lift).
   border: "1px solid var(--crc-border)",
-  boxShadow: "0 1px 2px rgba(62,43,35,0.04)",
 } as const
 
 const LEVEL_DOT: Record<string, string> = {

@@ -47,7 +47,7 @@ export function AppShell({ role, user, notifications, unreadCount, children }: P
           className="crc-main"
           style={{
             flex: 1,
-            backgroundColor: "var(--crc-sand)",
+            backgroundColor: "var(--crc-bg)",
           }}
         >
           {children}

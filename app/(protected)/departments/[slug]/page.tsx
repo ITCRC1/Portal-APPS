@@ -91,7 +91,7 @@ export default async function DepartmentPage({
             backgroundColor: "var(--crc-white)",
             borderRadius: 10,
             padding: "1.5rem",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            border: "1px solid var(--crc-border)",
           }}
         >
           <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
@@ -124,7 +124,7 @@ export default async function DepartmentPage({
             backgroundColor: "var(--crc-white)",
             borderRadius: 10,
             padding: "1.5rem",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            border: "1px solid var(--crc-border)",
           }}
         >
           <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
@@ -173,7 +173,7 @@ export default async function DepartmentPage({
               padding: "1.5rem",
               color: "#777",
               fontSize: "0.85rem",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+              border: "1px solid var(--crc-border)",
             }}
           >
             Este departamento no tiene documentos disponibles todavía.
