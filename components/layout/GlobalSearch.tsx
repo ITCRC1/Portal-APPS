@@ -113,9 +113,11 @@ export function GlobalSearch() {
   let runningIndex = -1
 
   return (
+    // El margen lateral se define en .crc-search para poder reducirlo en móvil.
     <div
       ref={boxRef}
-      style={{ position: "relative", flex: "1 1 320px", maxWidth: 460, margin: "0 1.5rem" }}
+      className="crc-search"
+      style={{ position: "relative", flex: "1 1 320px", maxWidth: 460 }}
     >
       <div style={{ position: "relative" }}>
         <span

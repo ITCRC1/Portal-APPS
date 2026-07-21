@@ -92,7 +92,10 @@ export async function UsersPanel() {
           una nueva; si dejas el campo vacío, se conserva la actual.
         </p>
 
-        {/* table-layout: fixed + anchos en % => la tabla siempre cabe, sin scroll horizontal. */}
+        {/* table-layout: fixed + anchos en % => la tabla siempre cabe, sin scroll horizontal.
+            En móvil el contenedor .crc-table-wrap le da scroll horizontal propio para que
+            las columnas no queden ilegibles. */}
+        <div className="crc-table-wrap">
         <table style={tableStyle}>
           <colgroup>
             <col style={{ width: "14%" }} />
@@ -224,6 +227,7 @@ export async function UsersPanel() {
             })}
           </tbody>
         </table>
+        </div>
       </section>
     </>
   )

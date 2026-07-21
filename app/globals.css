@@ -114,3 +114,107 @@ button:not(:disabled):active {
     transform: translateX(0) scale(1);
   }
 }
+
+/* ===== Responsive (móvil/tablet) ===== */
+/* Regla base = ESCRITORIO (>=768px): todo queda exactamente como estaba.
+   Los cambios de móvil viven en el @media (max-width: 767px) de abajo.
+   Se usan clases (no estilos inline) porque solo las reglas CSS admiten media queries. */
+
+/* Sidebar: fijo, sticky y de 244px en escritorio (idéntico al diseño actual). */
+.crc-sidebar {
+  width: 244px;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* Barra superior: mismo respiro de siempre en escritorio. */
+.crc-topbar {
+  padding: 1rem 1.5rem;
+}
+
+/* Zona de contenido: conserva su margen de 2rem en escritorio. */
+.crc-main {
+  padding: 2rem;
+}
+
+/* Buscador global: margen lateral de escritorio (se reduce en móvil). */
+.crc-search {
+  margin: 0 1.5rem;
+}
+
+/* Botón hamburguesa y overlay: solo se muestran en móvil. */
+.crc-menu-btn {
+  display: none;
+}
+.crc-overlay {
+  display: none;
+}
+
+/* Contenedor para tablas anchas: sin efecto en escritorio (caben al 100%). */
+.crc-table-wrap {
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  /* El sidebar deja de ocupar espacio y se vuelve un panel deslizable ("drawer"),
+     oculto a la izquierda por defecto y que entra al abrirlo. */
+  .crc-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
+    height: 100dvh;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+  }
+  .crc-sidebar.crc-sidebar-open {
+    transform: translateX(0);
+  }
+
+  /* Capa semitransparente que oscurece el fondo y cierra el drawer al tocar fuera. */
+  .crc-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(62, 43, 35, 0.5);
+  }
+
+  /* El botón hamburguesa aparece en la barra superior. */
+  .crc-menu-btn {
+    display: inline-flex;
+  }
+
+  /* Se ocultan datos secundarios de la TopBar (fecha y nombre/rol, ya visibles en
+     el pie del sidebar) para dejar sitio al buscador y las acciones. */
+  .crc-topbar-date,
+  .crc-topbar-user {
+    display: none;
+  }
+
+  /* Menos padding para aprovechar el ancho del teléfono. */
+  .crc-topbar {
+    padding: 0.75rem 1rem;
+  }
+  .crc-main {
+    padding: 1rem;
+  }
+  .crc-search {
+    margin: 0 0.5rem;
+  }
+
+  /* Tablas anchas del panel de admin: el scroll horizontal queda dentro del
+     contenedor, nunca en la página completa. */
+  .crc-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .crc-table-wrap table {
+    min-width: 640px;
+  }
+}

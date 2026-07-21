@@ -64,6 +64,8 @@ export async function DepartmentsPanel() {
         <h2 style={sectionTitleStyle}>Departamentos ({departments.length})</h2>
         <p style={sectionHintStyle}>Edita lo que necesites y pulsa Guardar en esa fila.</p>
 
+        {/* En móvil, .crc-table-wrap le da a la tabla scroll horizontal propio. */}
+        <div className="crc-table-wrap">
         <table style={tableStyle}>
           <colgroup>
             <col style={{ width: "18%" }} />
@@ -152,6 +154,7 @@ export async function DepartmentsPanel() {
             })}
           </tbody>
         </table>
+        </div>
       </section>
     </>
   )

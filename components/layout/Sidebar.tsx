@@ -8,6 +8,10 @@ import { MODULES, getAccessibleModules, ROLE_LABELS, type ModuleKey } from "@/li
 
 type Props = {
   role: Role
+  // Estado del drawer en móvil (en escritorio el sidebar siempre está visible).
+  drawerOpen?: boolean
+  // Se llama al navegar para cerrar el drawer en móvil.
+  onNavigate?: () => void
 }
 
 // Íconos por módulo (trazo, 18px) — hacen el menú mucho más escaneable.
@@ -79,27 +83,22 @@ function NavIcon({ k }: { k: ModuleKey }) {
   )
 }
 
-export function Sidebar({ role }: Props) {
+export function Sidebar({ role, drawerOpen = false, onNavigate }: Props) {
   const pathname = usePathname()
   const accessible = getAccessibleModules(role)
   const links = MODULES.filter((m) => accessible.includes(m.key))
 
   return (
+    // El tamaño/posición (sticky en escritorio, drawer deslizable en móvil) se controla
+    // desde CSS con .crc-sidebar; aquí solo quedan los estilos visuales, sin cambios.
     <aside
+      className={`crc-sidebar${drawerOpen ? " crc-sidebar-open" : ""}`}
       style={{
-        width: 244,
-        // Se mantiene visible aunque el contenido haga scroll.
-        position: "sticky",
-        top: 0,
-        alignSelf: "flex-start",
-        height: "100vh",
-        overflowY: "auto",
         backgroundColor: "var(--crc-brown-dark)",
         color: "var(--crc-white)",
         display: "flex",
         flexDirection: "column",
         padding: "1.5rem 1rem",
-        flexShrink: 0,
       }}
     >
       <div style={{ marginBottom: "2rem", padding: "0 0.5rem" }}>
@@ -134,6 +133,8 @@ export function Sidebar({ role }: Props) {
               key={l.href}
               href={l.href}
               className="crc-nav-link"
+              // Al elegir un módulo se cierra el drawer en móvil (en escritorio no aplica).
+              onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               style={{
                 display: "flex",

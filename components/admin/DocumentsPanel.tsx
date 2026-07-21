@@ -135,6 +135,8 @@ export async function DocumentsPanel() {
         {documents.length === 0 ? (
           <div style={{ color: "#777", fontSize: "0.85rem" }}>No hay documentos todavía.</div>
         ) : (
+          // En móvil, .crc-table-wrap le da a la tabla scroll horizontal propio.
+          <div className="crc-table-wrap">
           <table style={tableStyle}>
             <colgroup>
               <col style={{ width: "26%" }} />
@@ -214,6 +216,7 @@ export async function DocumentsPanel() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </>

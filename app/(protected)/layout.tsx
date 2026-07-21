@@ -2,8 +2,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
-import { Sidebar } from "@/components/layout/Sidebar"
-import { TopBar } from "@/components/layout/TopBar"
+import { AppShell } from "@/components/layout/AppShell"
 import { IdleTimeout } from "@/components/layout/IdleTimeout"
 import { Toaster } from "@/components/ui/toast"
 import type { NotificationView } from "@/components/layout/NotificationBell"
@@ -60,23 +59,20 @@ export default async function ProtectedLayout({
     when: formatWhen(n.createdAt),
   }))
 
+  // El estado del drawer (menú lateral en móvil) vive dentro de AppShell, un pequeño
+  // contenedor cliente; este layout sigue siendo Server Component y solo le pasa datos.
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <>
       <IdleTimeout />
       <Toaster />
-      <Sidebar role={role} />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <TopBar user={session.user} notifications={notifications} unreadCount={unreadCount} />
-        <main
-          style={{
-            flex: 1,
-            padding: "2rem",
-            backgroundColor: "var(--crc-sand)",
-          }}
-        >
-          {children}
-        </main>
-      </div>
-    </div>
+      <AppShell
+        role={role}
+        user={session.user}
+        notifications={notifications}
+        unreadCount={unreadCount}
+      >
+        {children}
+      </AppShell>
+    </>
   )
 }
