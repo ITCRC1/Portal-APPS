@@ -9,15 +9,48 @@ import { visibleAnnouncementsWhere, LEVEL_LABELS } from "@/lib/announcements"
 
 const cardStyle = {
   backgroundColor: "var(--crc-white)",
-  borderRadius: 10,
+  borderRadius: 12,
   padding: "1.25rem",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+  border: "1px solid var(--crc-border)",
+  boxShadow: "0 1px 2px rgba(62,43,35,0.04)",
 } as const
 
 const LEVEL_DOT: Record<string, string> = {
   info: "#8aa6c0",
   warning: "#d8b25a",
   critical: "#c96b5a",
+}
+
+// Íconos (trazo) para cada KPI: dan lectura inmediata de qué mide cada tarjeta.
+const KPI_ICONS: Record<string, React.ReactNode> = {
+  pending: <><path d="M12 6v6l4 2" /><circle cx="12" cy="12" r="9" /></>,
+  overdue: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></>,
+  docs: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></>,
+  alerts: <><path d="M3 11l18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></>,
+  users: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
+  departments: <><path d="M3 21h18" /><path d="M5 21V7l7-4 7 4v14" /><path d="M9 9h.01M12 9h.01M15 9h.01M9 13h.01M12 13h.01M15 13h.01" /></>,
+}
+
+function KpiIcon({ name, danger }: { name: string; danger?: boolean }) {
+  return (
+    <span
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 38,
+        height: 38,
+        borderRadius: 10,
+        flexShrink: 0,
+        backgroundColor: danger ? "#f7ece9" : "var(--crc-sand)",
+        color: danger ? "var(--crc-danger)" : "var(--crc-green)",
+      }}
+    >
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {KPI_ICONS[name]}
+      </svg>
+    </span>
+  )
 }
 
 function fmtDate(date: Date): string {
@@ -77,25 +110,31 @@ export default async function DashboardPage() {
       ])
     : null
 
-  const kpis: { title: string; value: string | number; accent?: boolean; href: string }[] = [
-    { title: "Tareas pendientes", value: pendingTasks, href: "/tasks" },
-    { title: "Tareas vencidas", value: overdueTasks, accent: overdueTasks > 0, href: "/tasks" },
-    { title: "Documentos disponibles", value: docsCount, href: "/documents" },
-    { title: "Avisos vigentes", value: announcementsCount, href: "/alerts" },
+  const kpis: {
+    title: string
+    value: string | number
+    accent?: boolean
+    href: string
+    icon: string
+  }[] = [
+    { title: "Tareas pendientes", value: pendingTasks, href: "/tasks", icon: "pending" },
+    { title: "Tareas vencidas", value: overdueTasks, accent: overdueTasks > 0, href: "/tasks", icon: "overdue" },
+    { title: "Documentos disponibles", value: docsCount, href: "/documents", icon: "docs" },
+    { title: "Avisos vigentes", value: announcementsCount, href: "/alerts", icon: "alerts" },
   ]
   if (corporateExtras) {
     kpis.push(
-      { title: "Usuarios activos", value: corporateExtras[0], href: "/admin" },
-      { title: "Departamentos", value: corporateExtras[1], href: "/departments" }
+      { title: "Usuarios activos", value: corporateExtras[0], href: "/admin", icon: "users" },
+      { title: "Departamentos", value: corporateExtras[1], href: "/departments", icon: "departments" }
     )
   }
 
   return (
     <div>
-      <h1 style={{ color: "var(--crc-brown-dark)", marginBottom: "0.25rem", fontSize: "1.5rem" }}>
+      <h1 style={{ color: "var(--crc-brown-dark)", marginBottom: "0.25rem", fontSize: "1.6rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
         Bienvenido, {session.user.name}
       </h1>
-      <p style={{ color: "#777", marginBottom: "2rem" }}>
+      <p style={{ color: "var(--crc-muted)", marginBottom: "2rem" }}>
         {isCorporate
           ? "Resumen general de la operación."
           : "Resumen de tu departamento y tu trabajo."}
@@ -104,26 +143,39 @@ export default async function DashboardPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
           gap: "1rem",
-          marginBottom: "2rem",
+          marginBottom: "2.25rem",
         }}
       >
         {kpis.map((k) => (
           <Link
             key={k.title}
             href={k.href}
-            style={{ ...cardStyle, textDecoration: "none", display: "block" }}
+            className="crc-lift"
+            style={{
+              ...cardStyle,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.85rem",
+            }}
           >
-            <div style={{ fontSize: "0.8rem", color: "#888", marginBottom: "0.4rem" }}>{k.title}</div>
-            <div
-              style={{
-                fontSize: "1.8rem",
-                fontWeight: 700,
-                color: k.accent ? "#a33" : "var(--crc-brown-dark)",
-              }}
-            >
-              {k.value}
+            <KpiIcon name={k.icon} danger={k.accent} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: "0.78rem", color: "var(--crc-muted)", marginBottom: "0.15rem" }}>
+                {k.title}
+              </div>
+              <div
+                style={{
+                  fontSize: "1.75rem",
+                  fontWeight: 700,
+                  lineHeight: 1.1,
+                  color: k.accent ? "var(--crc-danger)" : "var(--crc-brown-dark)",
+                }}
+              >
+                {k.value}
+              </div>
             </div>
           </Link>
         ))}
@@ -153,7 +205,7 @@ export default async function DashboardPage() {
           </div>
 
           {myTasks.length === 0 ? (
-            <p style={{ color: "#bbb", fontSize: "0.85rem", margin: 0 }}>
+            <p style={{ color: "var(--crc-muted-soft)", fontSize: "0.85rem", margin: 0 }}>
               No tienes tareas asignadas pendientes.
             </p>
           ) : (
@@ -168,14 +220,14 @@ export default async function DashboardPage() {
                       justifyContent: "space-between",
                       gap: "0.75rem",
                       paddingBottom: "0.6rem",
-                      borderBottom: "1px solid #f0ebe3",
+                      borderBottom: "1px solid var(--crc-border-soft)",
                     }}
                   >
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: "0.88rem", color: "var(--crc-brown-dark)", fontWeight: 600 }}>
                         {t.title}
                       </div>
-                      <div style={{ fontSize: "0.72rem", color: "#999" }}>
+                      <div style={{ fontSize: "0.72rem", color: "var(--crc-muted)" }}>
                         {STATUS_LABELS[t.status]} · Prioridad {PRIORITY_LABELS[t.priority]?.toLowerCase()}
                       </div>
                     </div>
@@ -184,7 +236,7 @@ export default async function DashboardPage() {
                         style={{
                           flexShrink: 0,
                           fontSize: "0.75rem",
-                          color: overdue ? "#a33" : "#999",
+                          color: overdue ? "var(--crc-danger)" : "var(--crc-muted)",
                           fontWeight: overdue ? 600 : 400,
                           whiteSpace: "nowrap",
                         }}
@@ -215,7 +267,7 @@ export default async function DashboardPage() {
           </div>
 
           {announcements.length === 0 ? (
-            <p style={{ color: "#bbb", fontSize: "0.85rem", margin: 0 }}>No hay avisos por ahora.</p>
+            <p style={{ color: "var(--crc-muted-soft)", fontSize: "0.85rem", margin: 0 }}>No hay avisos por ahora.</p>
           ) : (
             <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.6rem" }}>
               {announcements.map((a) => (
@@ -226,7 +278,7 @@ export default async function DashboardPage() {
                     gap: "0.6rem",
                     alignItems: "start",
                     paddingBottom: "0.6rem",
-                    borderBottom: "1px solid #f0ebe3",
+                    borderBottom: "1px solid var(--crc-border-soft)",
                   }}
                 >
                   <span
@@ -244,7 +296,7 @@ export default async function DashboardPage() {
                     <div style={{ fontSize: "0.88rem", color: "var(--crc-brown-dark)", fontWeight: 600 }}>
                       {a.title}
                     </div>
-                    <div style={{ fontSize: "0.72rem", color: "#999" }}>
+                    <div style={{ fontSize: "0.72rem", color: "var(--crc-muted)" }}>
                       {a.department ? a.department.name : "General"} · {fmtDate(a.publishedAt)}
                     </div>
                   </div>

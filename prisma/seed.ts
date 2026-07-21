@@ -71,8 +71,6 @@ const departments = [
 ]
 
 async function main() {
-  const passwordHash = await argon2.hash('CambiarEsteClave123!')
-
   // update deja intactos los datos que el admin haya editado desde el panel,
   // salvo la descripción/ícono base que sí conviene mantener alineados al PRD.
   for (const d of departments) {
@@ -89,19 +87,33 @@ async function main() {
     where: { slug: 'executive-office' },
   })
 
-  const user = await prisma.user.upsert({
-    where: { email: 'it@thecostaricacollection.com' },
-    update: {},
-    create: {
-      fullName: 'Administrador',
-      email: 'it@thecostaricacollection.com',
-      passwordHash,
-      role: 'SUPER_ADMIN',
-      departmentId: executiveOffice.id,
-    },
-  })
+  // El admin inicial NUNCA lleva contraseña fija en el código (sería una brecha en un
+  // repo público). Se toma de SEED_ADMIN_PASSWORD y solo se usa al CREARLO por primera
+  // vez; si el admin ya existe, no se toca su contraseña.
+  const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? 'it@thecostaricacollection.com').toLowerCase()
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } })
 
-  console.log('Usuario creado:', user.email)
+  if (existingAdmin) {
+    console.log('Usuario admin ya existe, no se modifica:', existingAdmin.email)
+  } else {
+    const seedPassword = process.env.SEED_ADMIN_PASSWORD
+    if (!seedPassword || seedPassword.length < 12) {
+      throw new Error(
+        'Define SEED_ADMIN_PASSWORD (mínimo 12 caracteres) antes de sembrar el admin inicial. ' +
+          'No existe contraseña por defecto por seguridad.'
+      )
+    }
+    const admin = await prisma.user.create({
+      data: {
+        fullName: 'Administrador',
+        email: adminEmail,
+        passwordHash: await argon2.hash(seedPassword),
+        role: 'SUPER_ADMIN',
+        departmentId: executiveOffice.id,
+      },
+    })
+    console.log('Usuario admin creado:', admin.email)
+  }
 
   const links = [
     {

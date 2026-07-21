@@ -36,6 +36,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...pero la plantilla SÍ se versiona (no lleva secretos reales):
+!.env.example
 
 # documentos internos: se cargan a la base de datos, nunca al repo
 *.docx

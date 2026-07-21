@@ -5,14 +5,25 @@
      color-scheme: light evita que el navegador pinte inputs y scrollbars en oscuro. */
   color-scheme: light;
 
+  /* Marca */
   --crc-brown-dark: #3E2B23;
   --crc-brown: #6B4E3D;
   --crc-green: #4A5D3A;
+  --crc-green-dark: #3B4B2E; /* hover de botones/enlaces */
   --crc-sand: #F0E6D8;
   --crc-gold: #C9A25D;
   --crc-white: #FFFFFF;
 
-  --background: var(--crc-white);
+  /* Neutros derivados (antes estaban a mano como #777/#888/#999/#bbb) */
+  --crc-ink: #2C2019;      /* texto principal fuerte */
+  --crc-muted: #7C7167;    /* texto secundario */
+  --crc-muted-soft: #A79E93; /* texto terciario / placeholders */
+  --crc-border: #E6DCCE;   /* bordes y separadores */
+  --crc-border-soft: #F1EBE1;
+  --crc-panel: #FBF8F3;    /* fondo de campos/sutil */
+  --crc-danger: #A6402F;   /* rojos (vencido, eliminar) */
+
+  --background: var(--crc-sand);
   --foreground: var(--crc-brown-dark);
 }
 
@@ -23,10 +34,73 @@
   --font-mono: var(--font-geist-mono);
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Se carga Geist en el layout; antes el body la pisaba con Arial. */
+  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Foco accesible y coherente en todo el portal (no se define inline, así que gana). */
+:focus-visible {
+  outline: 2px solid var(--crc-green);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--crc-gold) 45%, transparent);
+}
+
+/* Barra de desplazamiento discreta acorde a la paleta. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--crc-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--crc-border);
+  border-radius: 999px;
+}
+
+/* ----- Utilidades reutilizables (para sumar hover sin dejar de usar estilos inline) ----- */
+
+/* Tarjetas “clicables” del dashboard: se elevan al pasar el cursor. */
+.crc-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.crc-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(62, 43, 35, 0.12);
+}
+
+/* Enlaces de navegación del sidebar. */
+.crc-nav-link {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.crc-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Botones: realce y “press” sutiles y consistentes en todo el portal. */
+button:not(:disabled) {
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.06s ease, box-shadow 0.15s ease;
+}
+button:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+button:not(:disabled):active {
+  transform: translateY(1px);
 }
 
 /* Animación de entrada de las notificaciones (toasts). */

@@ -17,12 +17,14 @@ type Props = {
 }
 
 export function TopBar({ user, notifications = [], unreadCount = 0 }: Props) {
-  const today = new Date().toLocaleDateString("es-CR", {
+  const rawToday = new Date().toLocaleDateString("es-CR", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   })
+  // "martes, 21 de julio de 2026" -> "Martes, 21 de julio de 2026" (solo la inicial).
+  const today = rawToday.charAt(0).toUpperCase() + rawToday.slice(1)
 
   return (
     <header
@@ -35,7 +37,7 @@ export function TopBar({ user, notifications = [], unreadCount = 0 }: Props) {
         borderBottom: "1px solid #e5ddd3",
       }}
     >
-      <div style={{ fontSize: "0.85rem", color: "var(--crc-brown-dark)", textTransform: "capitalize", flexShrink: 0 }}>
+      <div style={{ fontSize: "0.85rem", color: "var(--crc-muted)", flexShrink: 0 }}>
         {today}
       </div>
       <GlobalSearch />
