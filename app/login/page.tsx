@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
 import Image from "next/image"
+import { safeNext } from "@/lib/safe-redirect"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -12,6 +13,13 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  // A dónde volver tras iniciar sesión (puede ser otra app del dominio via SSO).
+  // Se valida contra la lista blanca para no permitir redirecciones a sitios externos.
+  const [next, setNext] = useState<string | null>(null)
+
+  useEffect(() => {
+    setNext(safeNext(new URLSearchParams(window.location.search).get("next")))
+  }, [])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -33,8 +41,15 @@ export default function LoginPage() {
       return
     }
 
-    router.push("/dashboard")
-    router.refresh()
+    const dest = next ?? "/dashboard"
+    if (dest.startsWith("/")) {
+      // Destino interno de la intranet.
+      router.push(dest)
+      router.refresh()
+    } else {
+      // Otra app del dominio: navegación completa para que reciba la cookie SSO.
+      window.location.assign(dest)
+    }
   }
 
   return (
