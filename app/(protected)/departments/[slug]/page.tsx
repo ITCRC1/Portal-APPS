@@ -7,7 +7,7 @@ import { canAccessDepartment } from "@/lib/permissions"
 import { visibleDocumentsWhere } from "@/lib/documents"
 import { DocumentCard } from "@/components/documents/DocumentCard"
 import { getI18n } from "@/lib/i18n/server"
-import { fmt } from "@/lib/i18n/client"
+import { fmt } from "@/lib/i18n/format"
 
 export default async function DepartmentPage({
   params,

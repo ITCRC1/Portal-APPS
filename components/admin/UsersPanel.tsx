@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { createUser, updateUser, toggleUserActive, unlockUser } from "@/lib/actions/users"
 import { ToastForm } from "@/components/ui/ToastForm"
 import { getI18n } from "@/lib/i18n/server"
-import { fmt } from "@/lib/i18n/client"
+import { fmt } from "@/lib/i18n/format"
 import {
   badgeStyle,
   cardStyle,

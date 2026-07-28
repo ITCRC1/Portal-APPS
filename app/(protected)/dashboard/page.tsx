@@ -7,7 +7,7 @@ import { visibleTasksWhere } from "@/lib/tasks"
 import { visibleDocumentsWhere } from "@/lib/documents"
 import { visibleAnnouncementsWhere } from "@/lib/announcements"
 import { getI18n } from "@/lib/i18n/server"
-import { fmt } from "@/lib/i18n/client"
+import { fmt } from "@/lib/i18n/format"
 
 const cardStyle = {
   backgroundColor: "var(--crc-white)",

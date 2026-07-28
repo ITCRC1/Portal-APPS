@@ -5,7 +5,7 @@ import {
 } from "@/lib/actions/announcements"
 import { ToastForm } from "@/components/ui/ToastForm"
 import { getI18n } from "@/lib/i18n/server"
-import { fmt } from "@/lib/i18n/client"
+import { fmt } from "@/lib/i18n/format"
 
 type AnnouncementData = {
   id: string

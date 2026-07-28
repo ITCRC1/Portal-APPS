@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { searchAll, type SearchHit, type SearchType } from "@/lib/actions/search"
-import { useI18n, fmt } from "@/lib/i18n/client"
+import { useI18n } from "@/lib/i18n/client"
+import { fmt } from "@/lib/i18n/format"
 
 const TYPE_ICON: Record<SearchType, string> = {
   task: "✓",

@@ -7,7 +7,7 @@ import { IdleTimeout } from "@/components/layout/IdleTimeout"
 import { Toaster } from "@/components/ui/toast"
 import type { NotificationView } from "@/components/layout/NotificationBell"
 import { getI18n } from "@/lib/i18n/server"
-import { fmt } from "@/lib/i18n/client"
+import { fmt } from "@/lib/i18n/format"
 import type { Dictionary } from "@/lib/i18n/dictionaries/es"
 import type { Locale } from "@/lib/i18n/config"
 

@@ -25,8 +25,3 @@ export function useI18n(): I18nValue {
   if (!ctx) throw new Error("useI18n debe usarse dentro de <I18nProvider>")
   return ctx
 }
-
-// Reemplaza {n} en una plantilla (p. ej. "hace {n} min").
-export function fmt(template: string, values: Record<string, string | number>): string {
-  return template.replace(/\{(\w+)\}/g, (_, k) => String(values[k] ?? `{${k}}`))
-}

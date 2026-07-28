@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
 import { departmentScope, canViewAllDepartments } from "@/lib/permissions"
 import { getI18n } from "@/lib/i18n/server"
-import { fmt } from "@/lib/i18n/client"
+import { fmt } from "@/lib/i18n/format"
 
 export default async function DepartmentsPage() {
   const session = await requireModuleAccess("departments")
