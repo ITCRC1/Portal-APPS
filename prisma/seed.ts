@@ -137,6 +137,14 @@ async function main() {
       icon: '📖',
       order: 3,
     },
+    {
+      // App sin dominio corporativo (por ahora): sin SSO, solo enlace directo.
+      name: 'Reporte Diario',
+      url: 'https://frontend-daily-report-production.up.railway.app/',
+      description: 'Reporte diario de operación.',
+      icon: '📊',
+      order: 4,
+    },
   ]
 
   for (const link of links) {
