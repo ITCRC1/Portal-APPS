@@ -75,7 +75,7 @@ export default async function DepartmentsPage() {
                 {d.name}
               </div>
               <p style={{ fontSize: "0.85rem", color: "#777", margin: "0 0 0.75rem" }}>
-                {d.description}
+                {dict.deptDescriptions[d.slug as keyof typeof dict.deptDescriptions] ?? d.description}
               </p>
               <div style={{ fontSize: "0.75rem", color: "#999" }}>
                 {d.ownerName ? fmt(dict.departments.owner, { name: d.ownerName }) : dict.departments.noOwner}

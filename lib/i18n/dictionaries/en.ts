@@ -181,6 +181,17 @@ export const en: Dictionary = {
     noDepartment: "General",
     file: "File",
   },
+  deptDescriptions: {
+    "executive-office": "Corporate vision, company performance and strategic initiatives.",
+    finance: "Financial reporting, closings, cash control, budget and forecast.",
+    operations: "Hotel operations, guest experience, logistics and daily execution.",
+    "sales-marketing": "Commercial strategy, campaigns, channels and demand generation.",
+    "human-resources": "Personnel, contracts, onboarding, payroll and training.",
+    procurement: "Purchase requests and orders, suppliers, inventory and cost control.",
+    "maintenance-capex": "Preventive maintenance, work orders, CAPEX projects and assets.",
+    "legal-admin": "Contracts, policies, permits, corporate documents and legal deadlines.",
+    "it-systems": "Access, integrations, technical documentation and internal support.",
+  },
   departments: {
     subtitleAll: "All areas of The Costa Rica Collection.",
     subtitleOwn: "Your department within The Costa Rica Collection.",

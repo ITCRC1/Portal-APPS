@@ -180,6 +180,19 @@ export const es = {
     noDepartment: "General",
     file: "Archivo",
   },
+  // Descripciones de los departamentos sembrados (datos fijos), por slug. Se muestran
+  // traducidas; si un departamento se creó a mano y no está aquí, cae a la base.
+  deptDescriptions: {
+    "executive-office": "Visión corporativa, desempeño de la compañía e iniciativas estratégicas.",
+    finance: "Reportería financiera, cierres, control de caja, presupuesto y forecast.",
+    operations: "Operación hotelera, experiencia del huésped, logística y ejecución diaria.",
+    "sales-marketing": "Estrategia comercial, campañas, canales y generación de demanda.",
+    "human-resources": "Personal, contratos, onboarding, planilla y capacitación.",
+    procurement: "Solicitudes y órdenes de compra, proveedores, inventario y control de costos.",
+    "maintenance-capex": "Mantenimiento preventivo, órdenes de trabajo, proyectos CAPEX y activos.",
+    "legal-admin": "Contratos, pólizas, permisos, documentos corporativos y plazos legales.",
+    "it-systems": "Accesos, integraciones, documentación técnica y soporte interno.",
+  },
   departments: {
     subtitleAll: "Todas las áreas de The Costa Rica Collection.",
     subtitleOwn: "Tu departamento dentro de The Costa Rica Collection.",
