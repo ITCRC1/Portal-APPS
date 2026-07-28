@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { recordAudit } from "@/lib/audit"
 import { notifyUser } from "@/lib/notifications"
-import { canAccessModule, canViewAllDepartments } from "@/lib/permissions"
+import { canAccessModule, canViewAllDepartments, canViewAllProperties } from "@/lib/permissions"
 import {
   TASK_STATUSES,
   TASK_PRIORITIES,
@@ -14,17 +14,22 @@ import {
   type TaskStatus,
 } from "@/lib/tasks"
 
-type Actor = { id: string; role: Role; departmentId: string | null }
+type Actor = { id: string; role: Role; departmentId: string | null; propertyId: string | null }
 
 async function requireTasksActor(): Promise<Actor> {
   const session = await auth()
   const user = session?.user as
-    | { id?: string; role?: Role; departmentId?: string | null }
+    | { id?: string; role?: Role; departmentId?: string | null; propertyId?: string | null }
     | undefined
   if (!user?.id || !user.role || !canAccessModule(user.role, "tasks")) {
     throw new Error("No autorizado")
   }
-  return { id: user.id, role: user.role, departmentId: user.departmentId ?? null }
+  return {
+    id: user.id,
+    role: user.role,
+    departmentId: user.departmentId ?? null,
+    propertyId: user.propertyId ?? null,
+  }
 }
 
 /**
@@ -41,15 +46,27 @@ function resolveDepartmentId(actor: Actor, requested: string | null): string | n
   return actor.departmentId
 }
 
-// El responsable debe pertenecer al departamento de la tarea (o ser corporativo).
+/**
+ * Propiedad en la que la tarea puede vivir. Los roles globales eligen (o dejan
+ * corporativa = null); los demás quedan atados a su propia propiedad para que no
+ * puedan crear/mover tareas hacia otra propiedad (se ignora lo que llegue del form).
+ */
+function resolvePropertyId(actor: Actor, requested: string | null): string | null {
+  if (canViewAllProperties(actor.role)) return requested
+  return actor.propertyId
+}
+
+// El responsable debe pertenecer al departamento y a la propiedad de la tarea
+// (o ser corporativo en ese eje).
 async function validateAssignee(
   assigneeId: string | null,
-  taskDepartmentId: string | null
+  taskDepartmentId: string | null,
+  taskPropertyId: string | null
 ): Promise<string | null> {
   if (!assigneeId) return null
   const assignee = await prisma.user.findUnique({
     where: { id: assigneeId },
-    select: { departmentId: true, role: true, isActive: true },
+    select: { departmentId: true, propertyId: true, role: true, isActive: true },
   })
   if (!assignee || !assignee.isActive) {
     throw new Error("El responsable seleccionado no es válido")
@@ -61,6 +78,15 @@ async function validateAssignee(
     assignee.departmentId !== taskDepartmentId
   ) {
     throw new Error("El responsable no pertenece a ese departamento")
+  }
+  // Propiedad: si la tarea es de una propiedad, el responsable debe ser de esa
+  // propiedad (o global). Las tareas corporativas (null) admiten a cualquiera.
+  if (
+    taskPropertyId !== null &&
+    !canViewAllProperties(assignee.role) &&
+    assignee.propertyId !== taskPropertyId
+  ) {
+    throw new Error("El responsable no pertenece a esa propiedad")
   }
   return assigneeId
 }
@@ -86,9 +112,11 @@ export async function createTask(formData: FormData) {
   }
 
   const departmentId = resolveDepartmentId(actor, String(formData.get("departmentId") ?? "") || null)
+  const propertyId = resolvePropertyId(actor, String(formData.get("propertyId") ?? "") || null)
   const assignedToId = await validateAssignee(
     String(formData.get("assignedToId") ?? "") || null,
-    departmentId
+    departmentId,
+    propertyId
   )
 
   const last = await prisma.task.findFirst({
@@ -105,6 +133,7 @@ export async function createTask(formData: FormData) {
       dueDate,
       order: (last?.order ?? 0) + 1,
       departmentId,
+      propertyId,
       assignedToId,
       createdById: actor.id,
     },
@@ -135,12 +164,12 @@ export async function createTask(formData: FormData) {
 async function requireModifiableTask(actor: Actor, taskId: string) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
-    select: { id: true, departmentId: true },
+    select: { id: true, departmentId: true, propertyId: true },
   })
   if (!task) {
     throw new Error("La tarea no existe")
   }
-  if (!canModifyTask(actor.role, actor.departmentId, task.departmentId)) {
+  if (!canModifyTask(actor.role, actor.departmentId, actor.propertyId, task)) {
     throw new Error("No autorizado")
   }
   return task
@@ -198,14 +227,21 @@ export async function updateTask(formData: FormData) {
     ? String(formData.get("departmentId") ?? "") || null
     : current.departmentId
 
+  // Igual con la propiedad: los globales pueden re-etiquetarla; los demás la dejan
+  // como está (no pueden sacarla de su propiedad ni moverla a otra).
+  const propertyId = canViewAllProperties(actor.role)
+    ? String(formData.get("propertyId") ?? "") || null
+    : current.propertyId
+
   const assignedToId = await validateAssignee(
     String(formData.get("assignedToId") ?? "") || null,
-    departmentId
+    departmentId,
+    propertyId
   )
 
   const updated = await prisma.task.update({
     where: { id },
-    data: { title, description, priority, dueDate, departmentId, assignedToId },
+    data: { title, description, priority, dueDate, departmentId, propertyId, assignedToId },
   })
 
   await recordAudit({

@@ -34,6 +34,7 @@ export async function createAnnouncement(formData: FormData) {
 
   const pinned = formData.get("pinned") === "on"
   const departmentId = String(formData.get("departmentId") ?? "") || null
+  const propertyId = String(formData.get("propertyId") ?? "") || null
 
   const expiresRaw = String(formData.get("expiresAt") ?? "").trim()
   const expiresAt = expiresRaw ? new Date(expiresRaw) : null
@@ -48,6 +49,13 @@ export async function createAnnouncement(formData: FormData) {
     if (!dept) throw new Error("Departamento inválido")
   }
 
+  // Igual con la propiedad: solo quien publica (rol corporativo) puede dirigir el
+  // aviso a una propiedad o dejarlo corporativo (propertyId null = todas).
+  if (propertyId) {
+    const prop = await prisma.property.findUnique({ where: { id: propertyId }, select: { id: true } })
+    if (!prop) throw new Error("Propiedad inválida")
+  }
+
   const created = await prisma.announcement.create({
     data: {
       title,
@@ -57,6 +65,7 @@ export async function createAnnouncement(formData: FormData) {
       status: "active",
       expiresAt,
       departmentId,
+      propertyId,
       publishedById: publisher.id,
     },
   })
@@ -69,7 +78,7 @@ export async function createAnnouncement(formData: FormData) {
     details: `nivel: ${level}`,
   })
 
-  await notifyAnnouncementPublished({ title, departmentId, publisherId: publisher.id })
+  await notifyAnnouncementPublished({ title, departmentId, propertyId, publisherId: publisher.id })
 
   revalidatePath("/alerts")
   revalidatePath("/dashboard")

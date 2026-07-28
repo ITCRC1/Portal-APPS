@@ -30,6 +30,7 @@ export async function createUser(formData: FormData) {
   const password = String(formData.get("password") ?? "")
   const roleValue = String(formData.get("role") ?? "")
   const departmentId = String(formData.get("departmentId") ?? "") || null
+  const propertyId = String(formData.get("propertyId") ?? "") || null
 
   if (!fullName || !email || !password) {
     return fail(dict.userErrors.required)
@@ -62,6 +63,7 @@ export async function createUser(formData: FormData) {
       passwordHash,
       role: roleValue as Role,
       departmentId,
+      propertyId,
     },
   })
 
@@ -85,6 +87,7 @@ export async function updateUser(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase()
   const roleValue = String(formData.get("role") ?? "")
   const departmentId = String(formData.get("departmentId") ?? "") || null
+  const propertyId = String(formData.get("propertyId") ?? "") || null
   const password = String(formData.get("password") ?? "")
 
   if (!userId) {
@@ -120,6 +123,7 @@ export async function updateUser(formData: FormData) {
       email,
       role: roleValue as Role,
       departmentId,
+      propertyId,
       // Campo de clave vacío = se conserva la contraseña actual. Al cambiarla,
       // se desbloquea la cuenta (útil cuando el usuario olvidó la clave).
       ...(password

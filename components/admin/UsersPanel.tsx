@@ -26,9 +26,10 @@ import {
 const DEFAULT_PASSWORD = "12345678"
 
 export async function UsersPanel() {
-  const [users, departments] = await Promise.all([
+  const [users, departments, properties] = await Promise.all([
     prisma.user.findMany({ orderBy: { createdAt: "desc" }, include: { department: true } }),
     prisma.department.findMany({ where: { status: "active" }, orderBy: { order: "asc" } }),
+    prisma.property.findMany({ where: { status: "active" }, orderBy: { order: "asc" } }),
   ])
   const { dict } = await getI18n()
 
@@ -71,6 +72,18 @@ export async function UsersPanel() {
           </label>
 
           <label style={labelStyle}>
+            {dict.adminUsers.property}
+            <select name="propertyId" defaultValue="" style={inputStyle}>
+              <option value="">{dict.adminUsers.noProperty}</option>
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label style={labelStyle}>
             {dict.adminUsers.password}
             <input
               type="text"
@@ -99,13 +112,14 @@ export async function UsersPanel() {
         <div className="crc-table-wrap">
         <table style={tableStyle}>
           <colgroup>
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "19%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "7%" }} />
             <col style={{ width: "12%" }} />
-            <col style={{ width: "9%" }} />
+            <col style={{ width: "16%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "7%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "8%" }} />
             <col style={{ width: "11%" }} />
           </colgroup>
           <thead>
@@ -114,6 +128,7 @@ export async function UsersPanel() {
               <th style={thStyle}>{dict.adminUsers.email}</th>
               <th style={thStyle}>{dict.adminUsers.role}</th>
               <th style={thStyle}>{dict.adminUsers.department}</th>
+              <th style={thStyle}>{dict.adminUsers.property}</th>
               <th style={thStyle}>{dict.adminUsers.colStatus}</th>
               <th style={thStyle}>{dict.adminUsers.colNewPassword}</th>
               <th style={thStyle}></th>
@@ -171,6 +186,21 @@ export async function UsersPanel() {
                       {departments.map((d) => (
                         <option key={d.id} value={d.id}>
                           {d.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td style={tdStyle}>
+                    <select
+                      form={editFormId}
+                      name="propertyId"
+                      defaultValue={u.propertyId ?? ""}
+                      style={cellInputStyle}
+                    >
+                      <option value="">{dict.adminUsers.noProperty}</option>
+                      {properties.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
                         </option>
                       ))}
                     </select>

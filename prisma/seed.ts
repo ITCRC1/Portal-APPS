@@ -70,6 +70,15 @@ const departments = [
   },
 ]
 
+// Las 4 propiedades (hoteles / lodges) de The Costa Rica Collection. El slug es un
+// identificador estable; el contenido con propertyId null es corporativo (todas).
+const properties = [
+  { name: 'Oxygen Jungle Villas', slug: 'oxygen-jungle-villas', icon: '🌿', order: 1 },
+  { name: 'Amarena', slug: 'amarena', icon: '🌊', order: 2 },
+  { name: 'Ojochal Gardens', slug: 'ojochal-gardens', icon: '🏡', order: 3 },
+  { name: 'Corcovado Wilderness Lodge', slug: 'corcovado-wilderness-lodge', icon: '🌴', order: 4 },
+]
+
 async function main() {
   // update deja intactos los datos que el admin haya editado desde el panel,
   // salvo la descripción/ícono base que sí conviene mantener alineados al PRD.
@@ -82,6 +91,18 @@ async function main() {
   }
 
   console.log('Departamentos creados/verificados:', departments.length)
+
+  // Se preserva el nombre/ícono que el admin haya editado (solo se crean si faltan);
+  // el nombre no se sobre-escribe para no pisar cambios hechos desde el panel.
+  for (const p of properties) {
+    await prisma.property.upsert({
+      where: { slug: p.slug },
+      update: {},
+      create: p,
+    })
+  }
+
+  console.log('Propiedades creadas/verificadas:', properties.map((p) => p.name).join(', '))
 
   const executiveOffice = await prisma.department.findUniqueOrThrow({
     where: { slug: 'executive-office' },

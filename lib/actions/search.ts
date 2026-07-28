@@ -45,12 +45,13 @@ export async function searchAll(rawQuery: string): Promise<SearchHit[]> {
 
   const dbUser = await prisma.user.findUnique({
     where: { id },
-    select: { isActive: true, role: true, departmentId: true },
+    select: { isActive: true, role: true, departmentId: true, propertyId: true },
   })
   if (!dbUser || !dbUser.isActive) return []
 
   const role = dbUser.role as Role
   const deptId = dbUser.departmentId
+  const propId = dbUser.propertyId
   const contains = { contains: q, mode: "insensitive" as const }
 
   const jobs: Promise<SearchHit[]>[] = []
@@ -61,7 +62,7 @@ export async function searchAll(rawQuery: string): Promise<SearchHit[]> {
         .findMany({
           where: {
             AND: [
-              visibleTasksWhere(role, deptId),
+              visibleTasksWhere(role, deptId, propId),
               { OR: [{ title: contains }, { description: contains }] },
             ],
           },
@@ -87,7 +88,7 @@ export async function searchAll(rawQuery: string): Promise<SearchHit[]> {
         .findMany({
           where: {
             AND: [
-              visibleAnnouncementsWhere(role, deptId),
+              visibleAnnouncementsWhere(role, deptId, propId),
               { OR: [{ title: contains }, { body: contains }] },
             ],
           },
@@ -113,7 +114,7 @@ export async function searchAll(rawQuery: string): Promise<SearchHit[]> {
         .findMany({
           where: {
             AND: [
-              visibleDocumentsWhere(role, deptId),
+              visibleDocumentsWhere(role, deptId, propId),
               {
                 OR: [{ name: contains }, { description: contains }, { fileName: contains }],
               },

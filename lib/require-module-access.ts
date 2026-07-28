@@ -19,7 +19,7 @@ export async function requireModuleAccess(moduleKey: ModuleKey) {
 
   const dbUser = await prisma.user.findUnique({
     where: { id },
-    select: { isActive: true, role: true, departmentId: true },
+    select: { isActive: true, role: true, departmentId: true, propertyId: true },
   })
 
   if (!dbUser || !dbUser.isActive) {
@@ -33,5 +33,6 @@ export async function requireModuleAccess(moduleKey: ModuleKey) {
   // Valores reales (no los del token, que pueden estar desactualizados).
   session.user.role = dbUser.role
   session.user.departmentId = dbUser.departmentId
+  session.user.propertyId = dbUser.propertyId
   return session
 }

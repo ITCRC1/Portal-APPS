@@ -42,14 +42,19 @@ export default async function AlertsPage() {
   // Quien publica gestiona todos los avisos (incluye archivados/vencidos para poder
   // reactivarlos); el resto solo ve los vigentes dentro de su alcance.
   const announcements = await prisma.announcement.findMany({
-    where: canManage ? {} : visibleAnnouncementsWhere(role, session.user.departmentId),
+    where: canManage
+      ? {}
+      : visibleAnnouncementsWhere(role, session.user.departmentId, session.user.propertyId),
     orderBy: [{ pinned: "desc" }, { publishedAt: "desc" }],
     select: announcementSelect,
   })
 
-  const departments = canManage
-    ? await prisma.department.findMany({ where: { status: "active" }, orderBy: { order: "asc" } })
-    : []
+  const [departments, properties] = canManage
+    ? await Promise.all([
+        prisma.department.findMany({ where: { status: "active" }, orderBy: { order: "asc" } }),
+        prisma.property.findMany({ where: { status: "active" }, orderBy: { order: "asc" } }),
+      ])
+    : [[], []]
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -101,6 +106,18 @@ export default async function AlertsPage() {
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label style={labelStyle}>
+              {dict.alerts.fieldProperty}
+              <select name="propertyId" defaultValue="" style={inputStyle}>
+                <option value="">{dict.alerts.propertyAll}</option>
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
                   </option>
                 ))}
               </select>

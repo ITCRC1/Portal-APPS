@@ -29,12 +29,16 @@ export async function notifyUser(input: NotifyInput): Promise<void> {
 }
 
 /**
- * Notifica a la audiencia de un aviso: si es general, a todos los usuarios activos;
- * si es de un departamento, solo a ese departamento. Nunca al propio autor.
+ * Notifica a la audiencia de un aviso, según cómo se haya dirigido. Nunca al
+ * propio autor. Los filtros se combinan (departamento Y propiedad):
+ *  - sin departamento ni propiedad: a todos los usuarios activos;
+ *  - con departamento: solo a ese departamento;
+ *  - con propiedad: solo a esa propiedad.
  */
 export async function notifyAnnouncementPublished(input: {
   title: string
   departmentId: string | null
+  propertyId: string | null
   publisherId: string
 }): Promise<void> {
   try {
@@ -43,6 +47,7 @@ export async function notifyAnnouncementPublished(input: {
         isActive: true,
         id: { not: input.publisherId },
         ...(input.departmentId ? { departmentId: input.departmentId } : {}),
+        ...(input.propertyId ? { propertyId: input.propertyId } : {}),
       },
       select: { id: true },
     })

@@ -41,7 +41,7 @@ function formatSize(bytes: number): string {
 }
 
 export async function DocumentsPanel() {
-  const [documents, departments] = await Promise.all([
+  const [documents, departments, properties] = await Promise.all([
     prisma.document.findMany({
       orderBy: [{ department: { order: "asc" } }, { order: "asc" }],
       select: {
@@ -53,9 +53,11 @@ export async function DocumentsPanel() {
         confidentiality: true,
         status: true,
         department: { select: { name: true } },
+        property: { select: { name: true } },
       },
     }),
     prisma.department.findMany({ where: { status: "active" }, orderBy: { order: "asc" } }),
+    prisma.property.findMany({ where: { status: "active" }, orderBy: { order: "asc" } }),
   ])
   const { dict } = await getI18n()
 
@@ -112,6 +114,18 @@ export async function DocumentsPanel() {
           </label>
 
           <label style={labelStyle}>
+            {dict.adminDocuments.property}
+            <select name="propertyId" defaultValue="" style={inputStyle}>
+              <option value="">{dict.adminDocuments.propertyAll}</option>
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label style={labelStyle}>
             {dict.adminDocuments.visibility}
             <select name="confidentiality" defaultValue="public-internal" style={inputStyle}>
               {Object.entries(dict.confidentiality).map(([value, label]) => (
@@ -141,11 +155,12 @@ export async function DocumentsPanel() {
           <div className="crc-table-wrap">
           <table style={tableStyle}>
             <colgroup>
-              <col style={{ width: "26%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "14%" }} />
-              <col style={{ width: "15%" }} />
-              <col style={{ width: "8%" }} />
+              <col style={{ width: "22%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "7%" }} />
               <col style={{ width: "8%" }} />
               <col style={{ width: "8%" }} />
               <col style={{ width: "8%" }} />
@@ -155,6 +170,7 @@ export async function DocumentsPanel() {
                 <th style={thStyle}>{dict.adminDocuments.colName}</th>
                 <th style={thStyle}>{dict.adminDocuments.category}</th>
                 <th style={thStyle}>{dict.adminDocuments.department}</th>
+                <th style={thStyle}>{dict.adminDocuments.property}</th>
                 <th style={thStyle}>{dict.adminDocuments.colVisibility}</th>
                 <th style={thStyle}>{dict.adminUsers.colStatus}</th>
                 <th style={thStyle}></th>
@@ -178,6 +194,9 @@ export async function DocumentsPanel() {
                     <td style={{ ...tdStyle, fontSize: "0.78rem", color: "#555" }}>{d.category}</td>
                     <td style={{ ...tdStyle, fontSize: "0.78rem", color: "#555" }}>
                       {d.department?.name ?? dict.common.general}
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: "0.78rem", color: "#555" }}>
+                      {d.property?.name ?? dict.adminDocuments.propertyAll}
                     </td>
                     <td style={{ ...tdStyle, fontSize: "0.75rem", color: "#555" }}>
                       {dict.confidentiality[d.confidentiality as keyof typeof dict.confidentiality] ?? d.confidentiality}

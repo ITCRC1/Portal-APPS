@@ -1,5 +1,5 @@
 import type { Prisma, Role } from "@prisma/client"
-import { canViewAllDepartments } from "@/lib/permissions"
+import { canViewAllDepartments, propertyWhere } from "@/lib/permissions"
 
 // ---------- Niveles ----------
 
@@ -21,25 +21,35 @@ export function canPublishAnnouncements(role: Role): boolean {
 }
 
 /**
- * Filtro de avisos visibles para lectura (PRD 13). Solo activos y no vencidos:
+ * Filtro de avisos visibles para lectura (PRD 13). Solo activos y no vencidos.
+ * Combina departamento y propiedad con AND:
  *  - roles corporativos: todos
  *  - usuario con departamento: los de su departamento + los generales
  *  - usuario sin departamento: solo los generales
+ *  - además: acotados a su propiedad + los corporativos (propertyId null)
  */
 export function visibleAnnouncementsWhere(
   role: Role,
-  userDepartmentId: string | null
+  userDepartmentId: string | null,
+  userPropertyId: string | null
 ): Prisma.AnnouncementWhereInput {
   const notExpired: Prisma.AnnouncementWhereInput = {
     status: "active",
     OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
   }
 
-  if (canViewAllDepartments(role)) return notExpired
+  const and: Prisma.AnnouncementWhereInput[] = [notExpired]
 
-  const scope: Prisma.AnnouncementWhereInput = userDepartmentId
-    ? { OR: [{ departmentId: userDepartmentId }, { departmentId: null }] }
-    : { departmentId: null }
+  if (!canViewAllDepartments(role)) {
+    and.push(
+      userDepartmentId
+        ? { OR: [{ departmentId: userDepartmentId }, { departmentId: null }] }
+        : { departmentId: null }
+    )
+  }
 
-  return { AND: [notExpired, scope] }
+  const prop = propertyWhere(role, userPropertyId)
+  if ("OR" in prop) and.push(prop as Prisma.AnnouncementWhereInput)
+
+  return and.length === 1 ? notExpired : { AND: and }
 }

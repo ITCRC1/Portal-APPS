@@ -15,8 +15,10 @@ type TaskCardData = {
   priority: string
   dueDate: Date | null
   departmentId: string | null
+  propertyId: string | null
   assignedToId: string | null
   department: { name: string } | null
+  property: { name: string } | null
   assignedTo: { fullName: string } | null
 }
 
@@ -76,6 +78,7 @@ export async function TaskCard({
   showDepartment,
   assignableUsers,
   departments,
+  properties,
   isCorporate,
 }: {
   task: TaskCardData
@@ -83,6 +86,7 @@ export async function TaskCard({
   showDepartment: boolean
   assignableUsers: Option[]
   departments: Option[]
+  properties: Option[]
   isCorporate: boolean
 }) {
   const { locale, dict } = await getI18n()
@@ -139,6 +143,7 @@ export async function TaskCard({
           </span>
         )}
         {showDepartment && <span>🏢 {task.department?.name ?? dict.tasks.noDepartment}</span>}
+        {showDepartment && <span>🏝️ {task.property?.name ?? dict.tasks.propertyAll}</span>}
       </div>
 
       {canModify && (
@@ -194,6 +199,16 @@ export async function TaskCard({
                   {departments.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {isCorporate && (
+                <select name="propertyId" defaultValue={task.propertyId ?? ""} style={editInput}>
+                  <option value="">{dict.tasks.propertyAll}</option>
+                  {properties.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
                     </option>
                   ))}
                 </select>

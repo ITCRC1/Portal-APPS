@@ -81,6 +81,28 @@ model Department {
   announcements Announcement[]
 }
 
+// Propiedad (hotel / lodge) de The Costa Rica Collection. Es un eje ORTOGONAL al
+// departamento: cada propiedad tiene su Finanzas, Operaciones, etc. El contenido
+// se puede acotar a una propiedad; propertyId = null significa "corporativo"
+// (aplica a todas las propiedades y lo ven todos). Quién ve todas las propiedades
+// se decide por ROL, no aquí: ver PROPERTY_GLOBAL_ROLES en lib/permissions.ts.
+model Property {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  icon      String?
+  status    String   @default("active")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  documents     Document[]
+  tasks         Task[]
+  announcements Announcement[]
+  systemLinks   SystemLink[]
+}
+
 model User {
   id            String    @id @default(cuid())
   fullName      String
@@ -99,6 +121,12 @@ model User {
 
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
+
+  // Propiedad a la que pertenece el usuario. null = sin propiedad asignada (solo
+  // ve contenido corporativo). Los roles globales (Super Admin / Ejecutivo) ven
+  // todas las propiedades sin importar este campo.
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
 
   accounts Account[]
   sessions Session[]
@@ -122,6 +150,10 @@ model SystemLink {
 
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
+
+  // null = enlace corporativo (visible en todas las propiedades).
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
 }
 
 // El archivo se guarda en la propia base (columna bytea) en vez de en el disco del
@@ -146,6 +178,10 @@ model Document {
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
 
+  // null = documento corporativo (visible en todas las propiedades).
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+
   uploadedById String?
   uploadedBy   User?       @relation(fields: [uploadedById], references: [id])
 }
@@ -166,6 +202,10 @@ model Task {
 
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
+
+  // null = tarea corporativa (visible en todas las propiedades).
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
 
   assignedToId String?
   assignedTo   User?   @relation("AssignedTasks", fields: [assignedToId], references: [id])
@@ -191,6 +231,10 @@ model Announcement {
 
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
+
+  // null = aviso corporativo (visible en todas las propiedades).
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
 
   publishedById String?
   publishedBy   User?    @relation("PublishedAnnouncements", fields: [publishedById], references: [id])

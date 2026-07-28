@@ -1,7 +1,7 @@
 import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
-import { departmentScope } from "@/lib/permissions"
+import { departmentScope, propertyWhere } from "@/lib/permissions"
 import { getI18n } from "@/lib/i18n/server"
 
 export default async function SystemLinksPage() {
@@ -19,8 +19,16 @@ export default async function SystemLinksPage() {
         ? { OR: [{ departmentId: null }, { departmentId: scope.departmentId }] }
         : { departmentId: null }
 
+  // Además, acotados por propiedad (los corporativos, propertyId null, se ven en todas).
+  const propFilter = propertyWhere(role, session.user.propertyId)
+
+  const where =
+    "OR" in propFilter
+      ? { AND: [{ isActive: true, ...scopeFilter }, propFilter] }
+      : { isActive: true, ...scopeFilter }
+
   const links = await prisma.systemLink.findMany({
-    where: { isActive: true, ...scopeFilter },
+    where,
     orderBy: { order: "asc" },
     include: { department: true },
   })

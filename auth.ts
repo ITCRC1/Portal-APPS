@@ -67,6 +67,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.fullName,
           role: user.role,
           departmentId: user.departmentId,
+          propertyId: user.propertyId,
         }
       },
     }),
@@ -76,6 +77,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.role = (user as { role?: string }).role
         token.departmentId = (user as { departmentId?: string | null }).departmentId
+        token.propertyId = (user as { propertyId?: string | null }).propertyId
       }
       return token
     },
@@ -87,6 +89,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
         session.user.role = token.role as string
         session.user.departmentId = token.departmentId as string | null
+        session.user.propertyId = token.propertyId as string | null
       }
       return session
     },

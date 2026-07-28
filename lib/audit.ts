@@ -13,6 +13,7 @@ export type AuditAction =
 export type AuditEntity =
   | "user"
   | "department"
+  | "property"
   | "document"
   | "task"
   | "announcement"
@@ -75,6 +76,7 @@ export const ACTION_LABELS: Record<string, string> = {
 export const ENTITY_LABELS: Record<string, string> = {
   user: "Usuario",
   department: "Departamento",
+  property: "Propiedad",
   document: "Documento",
   task: "Tarea",
   announcement: "Aviso",

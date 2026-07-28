@@ -22,7 +22,8 @@ export async function GET(
 
   // El guard corre antes de entregar el archivo (PRD 13): nadie descarga fuera de su alcance.
   const userDepartmentId = (session.user as { departmentId?: string | null }).departmentId ?? null
-  if (!canAccessDocument(role, userDepartmentId, doc)) {
+  const userPropertyId = (session.user as { propertyId?: string | null }).propertyId ?? null
+  if (!canAccessDocument(role, userDepartmentId, userPropertyId, doc)) {
     return new Response("No autorizado", { status: 403 })
   }
 

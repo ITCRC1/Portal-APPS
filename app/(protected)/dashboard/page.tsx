@@ -64,12 +64,13 @@ export default async function DashboardPage() {
   const session = await requireModuleAccess("dashboard")
   const role = session.user.role as Role
   const departmentId = session.user.departmentId
+  const propertyId = session.user.propertyId
   const userId = session.user.id
   const isCorporate = canViewAllDepartments(role)
   const { locale, dict } = await getI18n()
 
   const now = new Date()
-  const taskScope = visibleTasksWhere(role, departmentId)
+  const taskScope = visibleTasksWhere(role, departmentId, propertyId)
 
   const [pendingTasks, overdueTasks, docsCount, announcements, announcementsCount, myTasks] =
     await Promise.all([
@@ -79,9 +80,9 @@ export default async function DashboardPage() {
       prisma.task.count({
         where: { AND: [taskScope, { status: { not: "done" }, dueDate: { lt: now } }] },
       }),
-      prisma.document.count({ where: visibleDocumentsWhere(role, departmentId) }),
+      prisma.document.count({ where: visibleDocumentsWhere(role, departmentId, propertyId) }),
       prisma.announcement.findMany({
-        where: visibleAnnouncementsWhere(role, departmentId),
+        where: visibleAnnouncementsWhere(role, departmentId, propertyId),
         orderBy: [{ pinned: "desc" }, { publishedAt: "desc" }],
         take: 4,
         select: {
@@ -92,7 +93,7 @@ export default async function DashboardPage() {
           department: { select: { name: true } },
         },
       }),
-      prisma.announcement.count({ where: visibleAnnouncementsWhere(role, departmentId) }),
+      prisma.announcement.count({ where: visibleAnnouncementsWhere(role, departmentId, propertyId) }),
       prisma.task.findMany({
         where: { assignedToId: userId, status: { not: "done" } },
         orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, { priority: "desc" }],

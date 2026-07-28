@@ -11,7 +11,7 @@ export default async function DocumentsPage() {
   const { dict } = await getI18n()
 
   const documents = await prisma.document.findMany({
-    where: visibleDocumentsWhere(role, session.user.departmentId),
+    where: visibleDocumentsWhere(role, session.user.departmentId, session.user.propertyId),
     orderBy: [{ department: { order: "asc" } }, { order: "asc" }, { name: "asc" }],
     select: {
       id: true,

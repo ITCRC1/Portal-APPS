@@ -70,12 +70,17 @@ export async function createDocument(formData: FormData) {
   const category = String(formData.get("category") ?? "Otro")
   const confidentiality = String(formData.get("confidentiality") ?? "department")
   const departmentId = String(formData.get("departmentId") ?? "") || null
+  const propertyId = String(formData.get("propertyId") ?? "") || null
 
   if (!CATEGORIES.includes(category)) {
     throw new Error("Categoría inválida")
   }
   if (!(confidentiality in CONFIDENTIALITY_LABELS)) {
     throw new Error("Nivel de confidencialidad inválido")
+  }
+  if (propertyId) {
+    const prop = await prisma.property.findUnique({ where: { id: propertyId }, select: { id: true } })
+    if (!prop) throw new Error("Propiedad inválida")
   }
 
   const bytes = Buffer.from(await file.arrayBuffer())
@@ -98,6 +103,7 @@ export async function createDocument(formData: FormData) {
       status: "active",
       order: (last?.order ?? 0) + 1,
       departmentId,
+      propertyId,
       uploadedById,
     },
   })

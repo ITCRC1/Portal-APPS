@@ -31,20 +31,21 @@ export default async function TasksPage({
   const session = await requireModuleAccess("tasks")
   const role = session.user.role as Role
   const userDepartmentId = session.user.departmentId
+  const userPropertyId = session.user.propertyId
   const isCorporate = canViewAllDepartments(role)
   const { dict } = await getI18n()
 
   const { assignee, status } = await searchParams
   const statusFilter = TASK_STATUSES.includes(status as TaskStatus) ? (status as TaskStatus) : null
 
-  // Alcance por departamento + filtros opcionales, todo dentro de la consulta.
-  const where: Prisma.TaskWhereInput = { AND: [visibleTasksWhere(role, userDepartmentId)] }
+  // Alcance por departamento + propiedad + filtros opcionales, todo dentro de la consulta.
+  const where: Prisma.TaskWhereInput = { AND: [visibleTasksWhere(role, userDepartmentId, userPropertyId)] }
   const and = where.AND as Prisma.TaskWhereInput[]
   if (assignee === "unassigned") and.push({ assignedToId: null })
   else if (assignee) and.push({ assignedToId: assignee })
   if (statusFilter) and.push({ status: statusFilter })
 
-  const [tasks, departments, assignableUsers] = await Promise.all([
+  const [tasks, departments, properties, assignableUsers] = await Promise.all([
     prisma.task.findMany({
       where,
       orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, { order: "asc" }],
@@ -56,18 +57,28 @@ export default async function TasksPage({
         priority: true,
         dueDate: true,
         departmentId: true,
+        propertyId: true,
         assignedToId: true,
         department: { select: { name: true } },
+        property: { select: { name: true } },
         assignedTo: { select: { fullName: true } },
       },
     }),
     isCorporate
       ? prisma.department.findMany({ where: { status: "active" }, orderBy: { order: "asc" } })
       : Promise.resolve([]),
+    isCorporate
+      ? prisma.property.findMany({ where: { status: "active" }, orderBy: { order: "asc" } })
+      : Promise.resolve([]),
     prisma.user.findMany({
       where: {
         isActive: true,
-        ...(isCorporate ? {} : { departmentId: userDepartmentId ?? "__none__" }),
+        ...(isCorporate
+          ? {}
+          : {
+              departmentId: userDepartmentId ?? "__none__",
+              ...(userPropertyId ? { propertyId: userPropertyId } : {}),
+            }),
       },
       orderBy: { fullName: "asc" },
       select: { id: true, fullName: true },
@@ -76,6 +87,7 @@ export default async function TasksPage({
 
   const assignableOptions = assignableUsers.map((u) => ({ id: u.id, name: u.fullName }))
   const departmentOptions = departments.map((d) => ({ id: d.id, name: d.name }))
+  const propertyOptions = properties.map((p) => ({ id: p.id, name: p.name }))
   const byStatus = (s: string) => tasks.filter((t) => t.status === s)
   const visibleStatuses = statusFilter ? [statusFilter] : TASK_STATUSES
   const filtersActive = Boolean(assignee || statusFilter)
@@ -129,6 +141,20 @@ export default async function TasksPage({
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {isCorporate && (
+            <label style={labelStyle}>
+              {dict.tasks.fieldProperty}
+              <select name="propertyId" defaultValue="" style={inputStyle}>
+                <option value="">{dict.tasks.propertyAll}</option>
+                {propertyOptions.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
                   </option>
                 ))}
               </select>
@@ -229,10 +255,11 @@ export default async function TasksPage({
                     <TaskCard
                       key={task.id}
                       task={task}
-                      canModify={canModifyTask(role, userDepartmentId, task.departmentId)}
+                      canModify={canModifyTask(role, userDepartmentId, userPropertyId, task)}
                       showDepartment={isCorporate}
                       assignableUsers={assignableOptions}
                       departments={departmentOptions}
+                      properties={propertyOptions}
                       isCorporate={isCorporate}
                     />
                   ))}

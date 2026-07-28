@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
-import { canAccessDepartment } from "@/lib/permissions"
+import { canAccessDepartment, propertyWhere } from "@/lib/permissions"
 import { visibleDocumentsWhere } from "@/lib/documents"
 import { DocumentCard } from "@/components/documents/DocumentCard"
 import { getI18n } from "@/lib/i18n/server"
@@ -19,16 +19,21 @@ export default async function DepartmentPage({
   const role = session.user.role as Role
   const { dict } = await getI18n()
 
+  // Aislamiento por propiedad: el equipo y los enlaces del departamento se acotan a
+  // la propiedad del usuario (+ lo corporativo). Los roles globales lo ven todo.
+  const propFilter = propertyWhere(role, session.user.propertyId)
+  const propScoped = "OR" in propFilter ? propFilter : {}
+
   const department = await prisma.department.findUnique({
     where: { slug },
     include: {
       users: {
-        where: { isActive: true },
+        where: { isActive: true, ...propScoped },
         orderBy: { fullName: "asc" },
         select: { id: true, fullName: true, email: true, role: true },
       },
       systemLinks: {
-        where: { isActive: true },
+        where: { isActive: true, ...propScoped },
         orderBy: { order: "asc" },
       },
     },
@@ -46,7 +51,10 @@ export default async function DepartmentPage({
   // Solo los documentos de esta área que el usuario tiene permitido ver.
   const documents = await prisma.document.findMany({
     where: {
-      AND: [visibleDocumentsWhere(role, session.user.departmentId), { departmentId: department.id }],
+      AND: [
+        visibleDocumentsWhere(role, session.user.departmentId, session.user.propertyId),
+        { departmentId: department.id },
+      ],
     },
     orderBy: [{ order: "asc" }, { name: "asc" }],
     select: {

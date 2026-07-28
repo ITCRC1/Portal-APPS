@@ -1,5 +1,6 @@
 import { UsersPanel } from "@/components/admin/UsersPanel"
 import { DepartmentsPanel } from "@/components/admin/DepartmentsPanel"
+import { PropertiesPanel } from "@/components/admin/PropertiesPanel"
 import { DocumentsPanel } from "@/components/admin/DocumentsPanel"
 import { AuditExport } from "@/components/admin/AuditExport"
 import { getI18n } from "@/lib/i18n/server"
@@ -19,6 +20,7 @@ export default async function AdminPage() {
 
       <UsersPanel />
       <DepartmentsPanel />
+      <PropertiesPanel />
       <DocumentsPanel />
       <AuditExport />
     </div>

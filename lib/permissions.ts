@@ -98,6 +98,66 @@ export function canAccessDepartment(
   return userDepartmentId === targetDepartmentId
 }
 
+// ---------- Alcance por propiedad (hotel / lodge) ----------
+//
+// La propiedad es un eje ORTOGONAL al departamento: el contenido se ve si
+// coincide la propiedad Y coincide el departamento Y la confidencialidad lo
+// permite. propertyId = null en el contenido significa "corporativo" (todas).
+
+/**
+ * ÚNICO lugar donde se decide qué ROLES ven todas las propiedades. Para cambiar
+ * el alcance de un rol (por si al negocio no le parece cómo quedó), se agrega o
+ * se quita de esta lista y se redespliega: no hay que tocar base de datos ni las
+ * consultas. Hoy: Super Administrador y Ejecutivo (este último ve todo pero no
+ * entra a Administración, que sigue siendo exclusiva del Super Administrador).
+ */
+export const PROPERTY_GLOBAL_ROLES: Role[] = ["SUPER_ADMIN", "EXECUTIVE"]
+
+export function canViewAllProperties(role: Role): boolean {
+  return PROPERTY_GLOBAL_ROLES.includes(role)
+}
+
+export type PropertyScope =
+  | { kind: "all" }
+  | { kind: "property"; propertyId: string }
+  | { kind: "corporate-only" }
+
+export function propertyScope(role: Role, userPropertyId: string | null): PropertyScope {
+  if (canViewAllProperties(role)) return { kind: "all" }
+  if (userPropertyId) return { kind: "property", propertyId: userPropertyId }
+  return { kind: "corporate-only" }
+}
+
+/**
+ * Cláusula Prisma de propiedad, para combinar con AND en cualquier consulta de
+ * contenido que tenga columna `propertyId`:
+ *  - roles globales: sin filtro (ven todas las propiedades);
+ *  - los demás: su propiedad + lo corporativo (propertyId null);
+ *  - sin propiedad asignada: solo lo corporativo.
+ * Se devuelve `{}` para los globales para poder concatenarla sin efecto.
+ */
+export function propertyWhere(
+  role: Role,
+  userPropertyId: string | null
+): { OR: { propertyId: string | null }[] } | Record<string, never> {
+  if (canViewAllProperties(role)) return {}
+  const or: { propertyId: string | null }[] = [{ propertyId: null }]
+  if (userPropertyId) or.push({ propertyId: userPropertyId })
+  return { OR: or }
+}
+
+// ¿La propiedad de un contenido es visible/modificable por el usuario? Los
+// globales pueden con todo; los demás, con lo corporativo (null) o lo de su
+// propiedad, nunca con el de otra propiedad.
+export function propertyMatches(
+  role: Role,
+  userPropertyId: string | null,
+  targetPropertyId: string | null
+): boolean {
+  if (canViewAllProperties(role)) return true
+  return targetPropertyId === null || targetPropertyId === userPropertyId
+}
+
 // ---------- Confidencialidad de documentos (PRD 10) ----------
 
 export const CONFIDENTIALITY = {
@@ -126,10 +186,15 @@ export const CONFIDENTIALITY_LABELS: Record<string, string> = {
 export function canAccessDocument(
   role: Role,
   userDepartmentId: string | null,
-  doc: { confidentiality: string; departmentId: string | null }
+  userPropertyId: string | null,
+  doc: { confidentiality: string; departmentId: string | null; propertyId: string | null }
 ): boolean {
   // Roles con visión corporativa ven todo.
   if (canViewAllDepartments(role)) return true
+
+  // Aislamiento por propiedad: un documento de otra propiedad no se ve, aunque el
+  // departamento/confidencialidad coincidan. Lo corporativo (propertyId null) sí.
+  if (!propertyMatches(role, userPropertyId, doc.propertyId)) return false
 
   switch (doc.confidentiality) {
     // A la mano de todos los usuarios autenticados, sin importar su departamento.

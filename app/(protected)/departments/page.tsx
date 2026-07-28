@@ -2,7 +2,7 @@ import Link from "next/link"
 import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
-import { departmentScope, canViewAllDepartments } from "@/lib/permissions"
+import { departmentScope, canViewAllDepartments, propertyWhere } from "@/lib/permissions"
 import { getI18n } from "@/lib/i18n/server"
 import { fmt } from "@/lib/i18n/format"
 
@@ -11,6 +11,11 @@ export default async function DepartmentsPage() {
   const role = session.user.role as Role
   const scope = departmentScope(role, session.user.departmentId)
   const { dict } = await getI18n()
+
+  // Conteos acotados por propiedad, para que el número de la tarjeta coincida con lo
+  // que el usuario realmente ve al entrar (equipo y enlaces de su propiedad + corporativos).
+  const propFilter = propertyWhere(role, session.user.propertyId)
+  const propScoped = "OR" in propFilter ? propFilter : {}
 
   // El filtro va dentro de la consulta (PRD 13): nadie recibe filas fuera de su alcance.
   const departments =
@@ -22,7 +27,14 @@ export default async function DepartmentsPage() {
             ...(scope.kind === "department" ? { id: scope.departmentId } : {}),
           },
           orderBy: { order: "asc" },
-          include: { _count: { select: { users: true, systemLinks: true } } },
+          include: {
+            _count: {
+              select: {
+                users: { where: { isActive: true, ...propScoped } },
+                systemLinks: { where: { isActive: true, ...propScoped } },
+              },
+            },
+          },
         })
 
   return (
