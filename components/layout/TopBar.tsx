@@ -2,9 +2,10 @@
 
 import { signOut } from "next-auth/react"
 import type { Role } from "@prisma/client"
-import { ROLE_LABELS } from "@/lib/permissions"
 import { NotificationBell, type NotificationView } from "@/components/layout/NotificationBell"
 import { GlobalSearch } from "@/components/layout/GlobalSearch"
+import { LanguageToggle } from "@/components/layout/LanguageToggle"
+import { useI18n } from "@/lib/i18n/client"
 
 type Props = {
   user?: {
@@ -19,7 +20,8 @@ type Props = {
 }
 
 export function TopBar({ user, notifications = [], unreadCount = 0, onMenuClick }: Props) {
-  const rawToday = new Date().toLocaleDateString("es-CR", {
+  const { locale, dict } = useI18n()
+  const rawToday = new Date().toLocaleDateString(locale === "es" ? "es-CR" : "en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -45,7 +47,7 @@ export function TopBar({ user, notifications = [], unreadCount = 0, onMenuClick 
         type="button"
         onClick={onMenuClick}
         className="crc-menu-btn"
-        aria-label="Abrir menú"
+        aria-label={dict.topbar.openMenu}
         style={{
           alignItems: "center",
           justifyContent: "center",
@@ -71,6 +73,7 @@ export function TopBar({ user, notifications = [], unreadCount = 0, onMenuClick 
       </div>
       <GlobalSearch />
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexShrink: 0 }}>
+        <LanguageToggle />
         <NotificationBell notifications={notifications} unreadCount={unreadCount} />
         {/* Nombre/rol: se ocultan en móvil (ya aparecen en el pie del sidebar). */}
         <div className="crc-topbar-user" style={{ textAlign: "right" }}>
@@ -78,7 +81,7 @@ export function TopBar({ user, notifications = [], unreadCount = 0, onMenuClick 
             {user?.name}
           </div>
           <div style={{ fontSize: "0.75rem", color: "#888" }}>
-            {user?.role ? ROLE_LABELS[user.role as Role] : ""}
+            {user?.role ? dict.roles[user.role as Role] : ""}
           </div>
         </div>
         <button
@@ -93,7 +96,7 @@ export function TopBar({ user, notifications = [], unreadCount = 0, onMenuClick 
             fontSize: "0.85rem",
           }}
         >
-          Salir
+          {dict.topbar.signOut}
         </button>
       </div>
     </header>

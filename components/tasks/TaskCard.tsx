@@ -1,12 +1,11 @@
 import {
-  PRIORITY_LABELS,
-  STATUS_LABELS,
   TASK_PRIORITIES,
   TASK_STATUSES,
   type TaskStatus,
 } from "@/lib/tasks"
 import { updateTaskStatus, updateTask, deleteTask } from "@/lib/actions/tasks"
 import { ToastForm } from "@/components/ui/ToastForm"
+import { getI18n } from "@/lib/i18n/server"
 
 type TaskCardData = {
   id: string
@@ -51,17 +50,17 @@ const editInput = {
   fontSize: "0.75rem",
 }
 
-function formatDue(date: Date): string {
-  return date.toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" })
+function formatDue(date: Date, locale: string): string {
+  return date.toLocaleDateString(locale === "es" ? "es-CR" : "en-US", { day: "2-digit", month: "short", year: "numeric" })
 }
 
 function dateInputValue(d: Date | null): string {
   return d ? d.toISOString().slice(0, 10) : ""
 }
 
-function moveButton(status: TaskStatus, taskId: string, label: string) {
+function moveButton(status: TaskStatus, taskId: string, label: string, success: string) {
   return (
-    <ToastForm action={updateTaskStatus} success="Tarea movida" style={{ display: "inline" }}>
+    <ToastForm action={updateTaskStatus} success={success} style={{ display: "inline" }}>
       <input type="hidden" name="taskId" value={taskId} />
       <input type="hidden" name="status" value={status} />
       <button type="submit" style={smallBtn}>
@@ -71,7 +70,7 @@ function moveButton(status: TaskStatus, taskId: string, label: string) {
   )
 }
 
-export function TaskCard({
+export async function TaskCard({
   task,
   canModify,
   showDepartment,
@@ -86,6 +85,7 @@ export function TaskCard({
   departments: Option[]
   isCorporate: boolean
 }) {
+  const { locale, dict } = await getI18n()
   const priority = PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.medium
   const idx = TASK_STATUSES.indexOf(task.status as TaskStatus)
   const prevStatus = idx > 0 ? TASK_STATUSES[idx - 1] : null
@@ -122,7 +122,7 @@ export function TaskCard({
             color: priority.fg,
           }}
         >
-          {PRIORITY_LABELS[task.priority] ?? task.priority}
+          {dict.taskPriority[task.priority as keyof typeof dict.taskPriority] ?? task.priority}
         </span>
       </div>
 
@@ -134,21 +134,21 @@ export function TaskCard({
         {task.assignedTo && <span>👤 {task.assignedTo.fullName}</span>}
         {task.dueDate && (
           <span style={{ color: overdue ? "#a33" : "#888", fontWeight: overdue ? 600 : 400 }}>
-            📅 {formatDue(task.dueDate)}
-            {overdue ? " (vencida)" : ""}
+            📅 {formatDue(task.dueDate, locale)}
+            {overdue ? ` ${dict.tasks.overdue}` : ""}
           </span>
         )}
-        {showDepartment && <span>🏢 {task.department?.name ?? "General"}</span>}
+        {showDepartment && <span>🏢 {task.department?.name ?? dict.tasks.noDepartment}</span>}
       </div>
 
       {canModify && (
         <>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.15rem" }}>
-            {prevStatus && moveButton(prevStatus, task.id, `← ${STATUS_LABELS[prevStatus]}`)}
-            {nextStatus && moveButton(nextStatus, task.id, `${STATUS_LABELS[nextStatus]} →`)}
+            {prevStatus && moveButton(prevStatus, task.id, `← ${dict.taskStatus[prevStatus]}`, dict.tasks.moved)}
+            {nextStatus && moveButton(nextStatus, task.id, `${dict.taskStatus[nextStatus]} →`, dict.tasks.moved)}
             <ToastForm
               action={deleteTask}
-              success="Tarea eliminada"
+              success={dict.tasks.deleted}
               style={{ display: "inline", marginLeft: "auto" }}
             >
               <input type="hidden" name="taskId" value={task.id} />
@@ -156,33 +156,33 @@ export function TaskCard({
                 type="submit"
                 style={{ ...smallBtn, border: "1px solid #d9b3b3", color: "#a33" }}
               >
-                Eliminar
+                {dict.tasks.delete}
               </button>
             </ToastForm>
           </div>
 
           <details>
             <summary style={{ cursor: "pointer", fontSize: "0.72rem", color: "var(--crc-brown)" }}>
-              Editar
+              {dict.tasks.edit}
             </summary>
             <ToastForm
               action={updateTask}
-              success="Cambios guardados"
+              success={dict.tasks.changesSaved}
               style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem" }}
             >
               <input type="hidden" name="taskId" value={task.id} />
-              <input name="title" defaultValue={task.title} required style={editInput} placeholder="Título" />
+              <input name="title" defaultValue={task.title} required style={editInput} placeholder={dict.tasks.fieldTitle} />
               <input
                 name="description"
                 defaultValue={task.description ?? ""}
                 style={editInput}
-                placeholder="Descripción"
+                placeholder={dict.tasks.fieldDescription}
               />
               <div style={{ display: "flex", gap: "0.4rem" }}>
                 <select name="priority" defaultValue={task.priority} style={editInput}>
                   {TASK_PRIORITIES.map((p) => (
                     <option key={p} value={p}>
-                      {PRIORITY_LABELS[p]}
+                      {dict.taskPriority[p]}
                     </option>
                   ))}
                 </select>
@@ -190,7 +190,7 @@ export function TaskCard({
               </div>
               {isCorporate && (
                 <select name="departmentId" defaultValue={task.departmentId ?? ""} style={editInput}>
-                  <option value="">General (sin departamento)</option>
+                  <option value="">{dict.tasks.departmentGeneral}</option>
                   {departments.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.name}
@@ -199,7 +199,7 @@ export function TaskCard({
                 </select>
               )}
               <select name="assignedToId" defaultValue={task.assignedToId ?? ""} style={editInput}>
-                <option value="">Sin asignar</option>
+                <option value="">{dict.tasks.unassigned}</option>
                 {assignableUsers.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
@@ -210,7 +210,7 @@ export function TaskCard({
                 type="submit"
                 style={{ ...smallBtn, backgroundColor: "var(--crc-green)", color: "var(--crc-white)", border: "none", fontWeight: 600 }}
               >
-                Guardar cambios
+                {dict.tasks.save}
               </button>
             </ToastForm>
           </details>

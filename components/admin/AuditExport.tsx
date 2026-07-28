@@ -9,6 +9,7 @@ import {
   labelStyle,
   createButtonStyle,
 } from "./styles"
+import { useI18n } from "@/lib/i18n/client"
 
 function pad(n: number) {
   return String(n).padStart(2, "0")
@@ -18,6 +19,7 @@ function dateStr(d: Date) {
 }
 
 export function AuditExport() {
+  const { dict } = useI18n()
   const now = new Date()
   const today = dateStr(now)
   const firstOfMonth = dateStr(new Date(now.getFullYear(), now.getMonth(), 1))
@@ -36,10 +38,9 @@ export function AuditExport() {
 
   return (
     <section style={cardStyle}>
-      <h2 style={sectionTitleStyle}>Bitácora de auditoría</h2>
+      <h2 style={sectionTitleStyle}>{dict.adminAudit.title}</h2>
       <p style={sectionHintStyle}>
-        Todo lo que se hace (usuarios, departamentos, documentos, tareas, avisos y tickets) queda
-        registrado. Descarga el historial en PDF por el rango de fechas que necesites.
+        {dict.adminAudit.hint}
       </p>
 
       <label
@@ -59,12 +60,12 @@ export function AuditExport() {
           onChange={(e) => setOnlyToday(e.target.checked)}
           style={{ width: "auto" }}
         />
-        Solo el día de hoy
+        {dict.adminAudit.onlyToday}
       </label>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "end" }}>
         <label style={{ ...labelStyle, opacity: onlyToday ? 0.45 : 1 }}>
-          Desde
+          {dict.adminAudit.from}
           <input
             type="date"
             value={from}
@@ -76,7 +77,7 @@ export function AuditExport() {
         </label>
 
         <label style={{ ...labelStyle, opacity: onlyToday ? 0.45 : 1 }}>
-          Hasta
+          {dict.adminAudit.to}
           <input
             type="date"
             value={to}
@@ -89,7 +90,7 @@ export function AuditExport() {
         </label>
 
         <button type="button" onClick={download} style={createButtonStyle}>
-          Descargar PDF
+          {dict.adminAudit.downloadPdf}
         </button>
       </div>
     </section>

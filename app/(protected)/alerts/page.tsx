@@ -5,8 +5,8 @@ import {
   visibleAnnouncementsWhere,
   canPublishAnnouncements,
   ANNOUNCEMENT_LEVELS,
-  LEVEL_LABELS,
 } from "@/lib/announcements"
+import { getI18n } from "@/lib/i18n/server"
 import { createAnnouncement } from "@/lib/actions/announcements"
 import { AnnouncementCard } from "@/components/announcements/AnnouncementCard"
 import { ToastForm } from "@/components/ui/ToastForm"
@@ -37,6 +37,7 @@ export default async function AlertsPage() {
   const session = await requireModuleAccess("alerts")
   const role = session.user.role as Role
   const canManage = canPublishAnnouncements(role)
+  const { dict } = await getI18n()
 
   // Quien publica gestiona todos los avisos (incluye archivados/vencidos para poder
   // reactivarlos); el resto solo ve los vigentes dentro de su alcance.
@@ -54,51 +55,49 @@ export default async function AlertsPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <div>
         <h1 style={{ color: "var(--crc-brown-dark)", fontSize: "1.5rem", marginBottom: "0.25rem" }}>
-          Avisos y Anuncios
+          {dict.alerts.title}
         </h1>
         <p style={{ color: "#777", margin: 0 }}>
-          {canManage
-            ? "Publica comunicados para toda la empresa o para un departamento."
-            : "Comunicados internos vigentes para ti y tu departamento."}
+          {canManage ? dict.alerts.subtitleManage : dict.alerts.subtitleView}
         </p>
       </div>
 
       {canManage && (
         <section style={cardStyle}>
-          <h2 style={sectionTitleStyle}>Nuevo aviso</h2>
-          <p style={sectionHintStyle}>El título y el mensaje son obligatorios.</p>
-          <ToastForm action={createAnnouncement} success="Aviso publicado" style={createFormStyle}>
+          <h2 style={sectionTitleStyle}>{dict.alerts.newTitle}</h2>
+          <p style={sectionHintStyle}>{dict.alerts.newHint}</p>
+          <ToastForm action={createAnnouncement} success={dict.alerts.success} style={createFormStyle}>
             <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
-              Título
-              <input name="title" required placeholder="Asunto del aviso" style={inputStyle} />
+              {dict.alerts.fieldTitle}
+              <input name="title" required placeholder={dict.alerts.titlePlaceholder} style={inputStyle} />
             </label>
 
             <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
-              Mensaje
+              {dict.alerts.fieldMessage}
               <textarea
                 name="body"
                 required
                 rows={3}
-                placeholder="Escribe el comunicado…"
+                placeholder={dict.alerts.messagePlaceholder}
                 style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit" }}
               />
             </label>
 
             <label style={labelStyle}>
-              Nivel
+              {dict.alerts.fieldLevel}
               <select name="level" defaultValue="info" style={inputStyle}>
                 {ANNOUNCEMENT_LEVELS.map((l) => (
                   <option key={l} value={l}>
-                    {LEVEL_LABELS[l]}
+                    {dict.announcementLevel[l]}
                   </option>
                 ))}
               </select>
             </label>
 
             <label style={labelStyle}>
-              Dirigido a
+              {dict.alerts.fieldAudience}
               <select name="departmentId" defaultValue="" style={inputStyle}>
-                <option value="">General (toda la empresa)</option>
+                <option value="">{dict.alerts.audienceGeneral}</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
@@ -108,17 +107,17 @@ export default async function AlertsPage() {
             </label>
 
             <label style={labelStyle}>
-              Vence (opcional)
+              {dict.alerts.fieldExpires}
               <input type="date" name="expiresAt" style={inputStyle} />
             </label>
 
             <label style={{ ...labelStyle, flexDirection: "row", alignItems: "center", gap: "0.5rem" }}>
               <input type="checkbox" name="pinned" style={{ width: "auto" }} />
-              Fijar arriba
+              {dict.alerts.pin}
             </label>
 
             <button type="submit" style={createButtonStyle}>
-              Publicar aviso
+              {dict.alerts.publish}
             </button>
           </ToastForm>
         </section>
@@ -126,7 +125,7 @@ export default async function AlertsPage() {
 
       {announcements.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: "center", color: "#999" }}>
-          {canManage ? "Aún no has publicado avisos." : "No hay avisos para ti por ahora."}
+          {canManage ? dict.alerts.emptyManage : dict.alerts.emptyView}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

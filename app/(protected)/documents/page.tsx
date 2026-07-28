@@ -3,10 +3,12 @@ import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
 import { visibleDocumentsWhere } from "@/lib/documents"
 import { DocumentCard } from "@/components/documents/DocumentCard"
+import { getI18n } from "@/lib/i18n/server"
 
 export default async function DocumentsPage() {
   const session = await requireModuleAccess("documents")
   const role = session.user.role as Role
+  const { dict } = await getI18n()
 
   const documents = await prisma.document.findMany({
     where: visibleDocumentsWhere(role, session.user.departmentId),
@@ -26,10 +28,10 @@ export default async function DocumentsPage() {
   return (
     <div>
       <h1 style={{ color: "var(--crc-brown-dark)", fontSize: "1.5rem", marginBottom: "0.25rem" }}>
-        Centro de Documentos
+        {dict.documents.title}
       </h1>
       <p style={{ color: "#777", marginBottom: "2rem" }}>
-        Documentos internos disponibles según tu rol y departamento.
+        {dict.documents.subtitle}
       </p>
 
       {documents.length === 0 ? (
@@ -43,7 +45,7 @@ export default async function DocumentsPage() {
             border: "1px solid var(--crc-border)",
           }}
         >
-          No hay documentos disponibles para ti todavía.
+          {dict.documents.empty}
         </div>
       ) : (
         <div

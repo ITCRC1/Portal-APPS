@@ -6,14 +6,18 @@ import { AppShell } from "@/components/layout/AppShell"
 import { IdleTimeout } from "@/components/layout/IdleTimeout"
 import { Toaster } from "@/components/ui/toast"
 import type { NotificationView } from "@/components/layout/NotificationBell"
+import { getI18n } from "@/lib/i18n/server"
+import { fmt } from "@/lib/i18n/client"
+import type { Dictionary } from "@/lib/i18n/dictionaries/es"
+import type { Locale } from "@/lib/i18n/config"
 
-function formatWhen(date: Date): string {
+function formatWhen(date: Date, dict: Dictionary, locale: Locale): string {
   const diffMin = Math.round((Date.now() - date.getTime()) / 60000)
-  if (diffMin < 1) return "hace un momento"
-  if (diffMin < 60) return `hace ${diffMin} min`
+  if (diffMin < 1) return dict.time.justNow
+  if (diffMin < 60) return fmt(dict.time.minutesAgo, { n: diffMin })
   const diffHr = Math.round(diffMin / 60)
-  if (diffHr < 24) return `hace ${diffHr} h`
-  return date.toLocaleDateString("es-CR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+  if (diffHr < 24) return fmt(dict.time.hoursAgo, { n: diffHr })
+  return date.toLocaleDateString(locale === "es" ? "es-CR" : "en-US", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
 }
 
 export default async function ProtectedLayout({
@@ -22,6 +26,7 @@ export default async function ProtectedLayout({
   children: React.ReactNode
 }) {
   const session = await auth()
+  const { locale, dict } = await getI18n()
 
   if (!session) {
     redirect("/login")
@@ -56,7 +61,7 @@ export default async function ProtectedLayout({
     body: n.body,
     link: n.link,
     read: n.read,
-    when: formatWhen(n.createdAt),
+    when: formatWhen(n.createdAt, dict, locale),
   }))
 
   // El estado del drawer (menú lateral en móvil) vive dentro de AppShell, un pequeño

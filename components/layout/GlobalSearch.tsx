@@ -3,14 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { searchAll, type SearchHit, type SearchType } from "@/lib/actions/search"
-
-const TYPE_LABEL: Record<SearchType, string> = {
-  task: "Tareas",
-  announcement: "Avisos",
-  document: "Documentos",
-  department: "Departamentos",
-  person: "Personas",
-}
+import { useI18n, fmt } from "@/lib/i18n/client"
 
 const TYPE_ICON: Record<SearchType, string> = {
   task: "✓",
@@ -25,6 +18,14 @@ const TYPE_ORDER: SearchType[] = ["task", "announcement", "document", "departmen
 
 export function GlobalSearch() {
   const router = useRouter()
+  const { dict } = useI18n()
+  const typeLabel: Record<SearchType, string> = {
+    task: dict.search.typeTask,
+    announcement: dict.search.typeAnnouncement,
+    document: dict.search.typeDocument,
+    department: dict.search.typeDepartment,
+    person: dict.search.typePerson,
+  }
   const [query, setQuery] = useState("")
   const [hits, setHits] = useState<SearchHit[]>([])
   const [loading, setLoading] = useState(false)
@@ -140,14 +141,14 @@ export function GlobalSearch() {
         <input
           type="text"
           value={query}
-          placeholder="Buscar tareas, avisos, documentos…"
+          placeholder={dict.search.placeholder}
           onChange={(e) => {
             setQuery(e.target.value)
             setOpen(true)
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          aria-label="Buscar en el portal"
+          aria-label={dict.search.aria}
           style={{
             width: "100%",
             padding: "0.5rem 0.75rem 0.5rem 2.2rem",
@@ -179,11 +180,11 @@ export function GlobalSearch() {
         >
           {loading && ordered.flat.length === 0 ? (
             <div style={{ padding: "1.25rem 0.9rem", textAlign: "center", color: "#aaa", fontSize: "0.85rem" }}>
-              Buscando…
+              {dict.search.searching}
             </div>
           ) : ordered.flat.length === 0 ? (
             <div style={{ padding: "1.25rem 0.9rem", textAlign: "center", color: "#aaa", fontSize: "0.85rem" }}>
-              Sin resultados para “{query.trim()}”.
+              {fmt(dict.search.noResultsFor, { q: query.trim() })}
             </div>
           ) : (
             ordered.groups.map((group) => (
@@ -198,7 +199,7 @@ export function GlobalSearch() {
                     color: "#a99",
                   }}
                 >
-                  {TYPE_LABEL[group.type]}
+                  {typeLabel[group.type]}
                 </div>
                 {group.items.map((hit) => {
                   runningIndex += 1

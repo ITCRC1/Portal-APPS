@@ -2,11 +2,13 @@ import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
 import { departmentScope } from "@/lib/permissions"
+import { getI18n } from "@/lib/i18n/server"
 
 export default async function SystemLinksPage() {
   const session = await requireModuleAccess("system-links")
   const role = session.user.role as Role
   const scope = departmentScope(role, session.user.departmentId)
+  const { dict } = await getI18n()
 
   // Los enlaces sin departamento son generales y los ve cualquiera; los de un
   // departamento, solo quien pertenece a él.
@@ -26,14 +28,14 @@ export default async function SystemLinksPage() {
   return (
     <div>
       <h1 style={{ color: "var(--crc-brown-dark)", fontSize: "1.5rem", marginBottom: "0.25rem" }}>
-        Enlaces del Sistema
+        {dict.nav["system-links"]}
       </h1>
       <p style={{ color: "#777", marginBottom: "2rem" }}>
-        Accesos directos a las plataformas internas de The Costa Rica Collection.
+        {dict.systemLinks.subtitle}
       </p>
 
       {links.length === 0 ? (
-        <p style={{ color: "#777" }}>No hay enlaces registrados todavía.</p>
+        <p style={{ color: "#777" }}>{dict.systemLinks.empty}</p>
       ) : (
         <div
           style={{

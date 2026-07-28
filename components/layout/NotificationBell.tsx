@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { openNotification, markAllNotificationsRead } from "@/lib/actions/notifications"
+import { useI18n } from "@/lib/i18n/client"
 
 export type NotificationView = {
   id: string
@@ -20,12 +21,13 @@ export function NotificationBell({
   unreadCount: number
 }) {
   const [open, setOpen] = useState(false)
+  const { dict } = useI18n()
 
   return (
     <div style={{ position: "relative" }}>
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label="Notificaciones"
+        aria-label={dict.notifications.title}
         style={{
           position: "relative",
           display: "flex",
@@ -101,7 +103,7 @@ export function NotificationBell({
               }}
             >
               <span style={{ fontWeight: 600, color: "var(--crc-brown-dark)", fontSize: "0.9rem" }}>
-                Notificaciones
+                {dict.notifications.title}
               </span>
               {unreadCount > 0 && (
                 <form action={markAllNotificationsRead}>
@@ -115,7 +117,7 @@ export function NotificationBell({
                       cursor: "pointer",
                     }}
                   >
-                    Marcar todas como leídas
+                    {dict.notifications.markAllRead}
                   </button>
                 </form>
               )}
@@ -123,7 +125,7 @@ export function NotificationBell({
 
             {notifications.length === 0 ? (
               <div style={{ padding: "1.5rem 0.9rem", textAlign: "center", color: "#aaa", fontSize: "0.85rem" }}>
-                No tienes notificaciones.
+                {dict.notifications.empty}
               </div>
             ) : (
               notifications.map((n) => (

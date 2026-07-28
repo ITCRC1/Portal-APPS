@@ -5,6 +5,8 @@ import {
   toggleDepartmentStatus,
 } from "@/lib/actions/departments"
 import { ToastForm } from "@/components/ui/ToastForm"
+import { getI18n } from "@/lib/i18n/server"
+import { fmt } from "@/lib/i18n/client"
 import {
   badgeStyle,
   cardStyle,
@@ -28,41 +30,42 @@ export async function DepartmentsPanel() {
   const departments = await prisma.department.findMany({
     orderBy: { order: "asc" },
   })
+  const { dict } = await getI18n()
 
   return (
     <>
       <section style={cardStyle}>
-        <h2 style={{ ...sectionTitleStyle, marginBottom: "1rem" }}>Crear departamento</h2>
-        <ToastForm action={createDepartment} success="Departamento creado" style={createFormStyle}>
+        <h2 style={{ ...sectionTitleStyle, marginBottom: "1rem" }}>{dict.adminDepartments.createTitle}</h2>
+        <ToastForm action={createDepartment} success={dict.adminDepartments.created} style={createFormStyle}>
           <label style={labelStyle}>
-            Nombre
-            <input name="name" required placeholder="Ej: Revenue Management" style={inputStyle} />
+            {dict.adminDepartments.name}
+            <input name="name" required placeholder={dict.adminDepartments.namePlaceholder} style={inputStyle} />
           </label>
 
           <label style={labelStyle}>
-            Ícono
+            {dict.adminDepartments.icon}
             <input name="icon" placeholder="📊" style={inputStyle} />
           </label>
 
           <label style={labelStyle}>
-            Descripción
-            <input name="description" placeholder="Qué hace esta área" style={inputStyle} />
+            {dict.adminDepartments.description}
+            <input name="description" placeholder={dict.adminDepartments.descriptionPlaceholder} style={inputStyle} />
           </label>
 
           <label style={labelStyle}>
-            Responsable
-            <input name="ownerName" placeholder="Nombre del encargado" style={inputStyle} />
+            {dict.adminDepartments.owner}
+            <input name="ownerName" placeholder={dict.adminDepartments.ownerPlaceholder} style={inputStyle} />
           </label>
 
           <button type="submit" style={createButtonStyle}>
-            Crear departamento
+            {dict.adminDepartments.create}
           </button>
         </ToastForm>
       </section>
 
       <section style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Departamentos ({departments.length})</h2>
-        <p style={sectionHintStyle}>Edita lo que necesites y pulsa Guardar en esa fila.</p>
+        <h2 style={sectionTitleStyle}>{fmt(dict.adminDepartments.existingTitle, { n: departments.length })}</h2>
+        <p style={sectionHintStyle}>{dict.adminDepartments.hint}</p>
 
         {/* En móvil, .crc-table-wrap le da a la tabla scroll horizontal propio. */}
         <div className="crc-table-wrap">
@@ -78,11 +81,11 @@ export async function DepartmentsPanel() {
           </colgroup>
           <thead>
             <tr style={theadRowStyle}>
-              <th style={thStyle}>Nombre</th>
-              <th style={thStyle}>Ícono</th>
-              <th style={thStyle}>Descripción</th>
-              <th style={thStyle}>Responsable</th>
-              <th style={thStyle}>Estado</th>
+              <th style={thStyle}>{dict.adminDepartments.name}</th>
+              <th style={thStyle}>{dict.adminDepartments.icon}</th>
+              <th style={thStyle}>{dict.adminDepartments.description}</th>
+              <th style={thStyle}>{dict.adminDepartments.owner}</th>
+              <th style={thStyle}>{dict.adminUsers.colStatus}</th>
               <th style={thStyle}></th>
               <th style={thStyle}></th>
             </tr>
@@ -125,27 +128,27 @@ export async function DepartmentsPanel() {
                       form={editFormId}
                       name="ownerName"
                       defaultValue={d.ownerName ?? ""}
-                      placeholder="Sin asignar"
+                      placeholder={dict.adminDepartments.ownerUnassigned}
                       style={cellInputStyle}
                     />
                   </td>
                   <td style={tdStyle}>
-                    <span style={badgeStyle(isActive)}>{isActive ? "Activo" : "Inactivo"}</span>
+                    <span style={badgeStyle(isActive)}>{isActive ? dict.common.active : dict.common.inactive}</span>
                   </td>
                   <td style={tdStyle}>
-                    <ToastForm id={editFormId} action={updateDepartment} success="Departamento actualizado">
+                    <ToastForm id={editFormId} action={updateDepartment} success={dict.adminDepartments.updated}>
                       <input type="hidden" name="departmentId" value={d.id} />
                       <button type="submit" style={primaryButtonStyle}>
-                        Guardar
+                        {dict.adminUsers.save}
                       </button>
                     </ToastForm>
                   </td>
                   <td style={tdStyle}>
-                    <ToastForm action={toggleDepartmentStatus} success="Estado actualizado">
+                    <ToastForm action={toggleDepartmentStatus} success={dict.adminUsers.statusUpdated}>
                       <input type="hidden" name="departmentId" value={d.id} />
                       <input type="hidden" name="nextStatus" value={isActive ? "inactive" : "active"} />
                       <button type="submit" style={{ ...outlineButtonStyle, width: "100%" }}>
-                        {isActive ? "Desactivar" : "Activar"}
+                        {isActive ? dict.adminUsers.deactivate : dict.adminUsers.activate}
                       </button>
                     </ToastForm>
                   </td>

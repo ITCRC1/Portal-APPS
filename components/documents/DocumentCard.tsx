@@ -1,4 +1,4 @@
-import { CONFIDENTIALITY_LABELS } from "@/lib/permissions"
+import { getI18n } from "@/lib/i18n/server"
 
 type Props = {
   doc: {
@@ -19,12 +19,13 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function fileKind(fileName: string): string {
+function fileKind(fileName: string, fallback: string): string {
   const ext = fileName.split(".").pop()?.toUpperCase() ?? ""
-  return ext || "Archivo"
+  return ext || fallback
 }
 
-export function DocumentCard({ doc }: Props) {
+export async function DocumentCard({ doc }: Props) {
+  const { dict } = await getI18n()
   return (
     <div
       style={{
@@ -48,7 +49,7 @@ export function DocumentCard({ doc }: Props) {
             padding: "0.05rem 0.35rem",
           }}
         >
-          {fileKind(doc.fileName)}
+          {fileKind(doc.fileName, dict.documents.file)}
         </span>
         <span style={{ fontSize: "0.75rem", color: "#999" }}>{formatSize(doc.size)}</span>
       </div>
@@ -63,7 +64,7 @@ export function DocumentCard({ doc }: Props) {
       <div style={{ fontSize: "0.72rem", color: "#999", marginBottom: "1rem" }}>
         {doc.category}
         {doc.department ? ` · ${doc.department.name}` : ""} ·{" "}
-        {CONFIDENTIALITY_LABELS[doc.confidentiality] ?? doc.confidentiality}
+        {dict.confidentiality[doc.confidentiality as keyof typeof dict.confidentiality] ?? doc.confidentiality}
       </div>
 
       <a
@@ -80,7 +81,7 @@ export function DocumentCard({ doc }: Props) {
           textDecoration: "none",
         }}
       >
-        Descargar
+        {dict.documents.download}
       </a>
     </div>
   )

@@ -3,9 +3,11 @@ import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
 import { canViewAllDepartments } from "@/lib/permissions"
-import { visibleTasksWhere, PRIORITY_LABELS, STATUS_LABELS } from "@/lib/tasks"
+import { visibleTasksWhere } from "@/lib/tasks"
 import { visibleDocumentsWhere } from "@/lib/documents"
-import { visibleAnnouncementsWhere, LEVEL_LABELS } from "@/lib/announcements"
+import { visibleAnnouncementsWhere } from "@/lib/announcements"
+import { getI18n } from "@/lib/i18n/server"
+import { fmt } from "@/lib/i18n/client"
 
 const cardStyle = {
   backgroundColor: "var(--crc-white)",
@@ -54,8 +56,8 @@ function KpiIcon({ name, danger }: { name: string; danger?: boolean }) {
   )
 }
 
-function fmtDate(date: Date): string {
-  return date.toLocaleDateString("es-CR", { day: "2-digit", month: "short" })
+function fmtDate(date: Date, locale: string): string {
+  return date.toLocaleDateString(locale === "es" ? "es-CR" : "en-US", { day: "2-digit", month: "short" })
 }
 
 export default async function DashboardPage() {
@@ -64,6 +66,7 @@ export default async function DashboardPage() {
   const departmentId = session.user.departmentId
   const userId = session.user.id
   const isCorporate = canViewAllDepartments(role)
+  const { locale, dict } = await getI18n()
 
   const now = new Date()
   const taskScope = visibleTasksWhere(role, departmentId)
@@ -118,27 +121,25 @@ export default async function DashboardPage() {
     href: string
     icon: string
   }[] = [
-    { title: "Tareas pendientes", value: pendingTasks, href: "/tasks", icon: "pending" },
-    { title: "Tareas vencidas", value: overdueTasks, accent: overdueTasks > 0, href: "/tasks", icon: "overdue" },
-    { title: "Documentos disponibles", value: docsCount, href: "/documents", icon: "docs" },
-    { title: "Avisos vigentes", value: announcementsCount, href: "/alerts", icon: "alerts" },
+    { title: dict.dashboard.kpiPendingTasks, value: pendingTasks, href: "/tasks", icon: "pending" },
+    { title: dict.dashboard.kpiOverdueTasks, value: overdueTasks, accent: overdueTasks > 0, href: "/tasks", icon: "overdue" },
+    { title: dict.dashboard.kpiDocuments, value: docsCount, href: "/documents", icon: "docs" },
+    { title: dict.dashboard.kpiAnnouncements, value: announcementsCount, href: "/alerts", icon: "alerts" },
   ]
   if (corporateExtras) {
     kpis.push(
-      { title: "Usuarios activos", value: corporateExtras[0], href: "/admin", icon: "users" },
-      { title: "Departamentos", value: corporateExtras[1], href: "/departments", icon: "departments" }
+      { title: dict.dashboard.kpiActiveUsers, value: corporateExtras[0], href: "/admin", icon: "users" },
+      { title: dict.dashboard.kpiDepartments, value: corporateExtras[1], href: "/departments", icon: "departments" }
     )
   }
 
   return (
     <div>
       <h1 style={{ color: "var(--crc-brown-dark)", marginBottom: "0.25rem", fontSize: "1.6rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
-        Bienvenido, {session.user.name}
+        {fmt(dict.dashboard.welcome, { name: session.user.name ?? "" })}
       </h1>
       <p style={{ color: "var(--crc-muted)", marginBottom: "2rem" }}>
-        {isCorporate
-          ? "Resumen general de la operación."
-          : "Resumen de tu departamento y tu trabajo."}
+        {isCorporate ? dict.dashboard.summaryCorporate : dict.dashboard.summaryPersonal}
       </p>
 
       <div
@@ -199,15 +200,15 @@ export default async function DashboardPage() {
               marginBottom: "1rem",
             }}
           >
-            <h2 style={{ margin: 0, fontSize: "1.05rem", color: "var(--crc-brown-dark)" }}>Mis tareas</h2>
+            <h2 style={{ margin: 0, fontSize: "1.05rem", color: "var(--crc-brown-dark)" }}>{dict.dashboard.myTasks}</h2>
             <Link href="/tasks" style={{ fontSize: "0.8rem", color: "var(--crc-green)" }}>
-              Ver todas
+              {dict.dashboard.viewAllTasks}
             </Link>
           </div>
 
           {myTasks.length === 0 ? (
             <p style={{ color: "var(--crc-muted-soft)", fontSize: "0.85rem", margin: 0 }}>
-              No tienes tareas asignadas pendientes.
+              {dict.dashboard.noTasks}
             </p>
           ) : (
             <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.6rem" }}>
@@ -229,7 +230,7 @@ export default async function DashboardPage() {
                         {t.title}
                       </div>
                       <div style={{ fontSize: "0.72rem", color: "var(--crc-muted)" }}>
-                        {STATUS_LABELS[t.status]} · Prioridad {PRIORITY_LABELS[t.priority]?.toLowerCase()}
+                        {dict.taskStatus[t.status as keyof typeof dict.taskStatus]} · {fmt(dict.dashboard.priorityInline, { p: dict.taskPriority[t.priority as keyof typeof dict.taskPriority]?.toLowerCase() })}
                       </div>
                     </div>
                     {t.dueDate && (
@@ -242,7 +243,7 @@ export default async function DashboardPage() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {fmtDate(t.dueDate)}
+                        {fmtDate(t.dueDate, locale)}
                       </span>
                     )}
                   </li>
@@ -261,14 +262,14 @@ export default async function DashboardPage() {
               marginBottom: "1rem",
             }}
           >
-            <h2 style={{ margin: 0, fontSize: "1.05rem", color: "var(--crc-brown-dark)" }}>Últimos avisos</h2>
+            <h2 style={{ margin: 0, fontSize: "1.05rem", color: "var(--crc-brown-dark)" }}>{dict.dashboard.latestAnnouncements}</h2>
             <Link href="/alerts" style={{ fontSize: "0.8rem", color: "var(--crc-green)" }}>
-              Ver todos
+              {dict.dashboard.viewAllAnnouncements}
             </Link>
           </div>
 
           {announcements.length === 0 ? (
-            <p style={{ color: "var(--crc-muted-soft)", fontSize: "0.85rem", margin: 0 }}>No hay avisos por ahora.</p>
+            <p style={{ color: "var(--crc-muted-soft)", fontSize: "0.85rem", margin: 0 }}>{dict.dashboard.noAnnouncements}</p>
           ) : (
             <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0.6rem" }}>
               {announcements.map((a) => (
@@ -283,7 +284,7 @@ export default async function DashboardPage() {
                   }}
                 >
                   <span
-                    title={LEVEL_LABELS[a.level]}
+                    title={dict.announcementLevel[a.level as keyof typeof dict.announcementLevel]}
                     style={{
                       flexShrink: 0,
                       width: 9,
@@ -298,7 +299,7 @@ export default async function DashboardPage() {
                       {a.title}
                     </div>
                     <div style={{ fontSize: "0.72rem", color: "var(--crc-muted)" }}>
-                      {a.department ? a.department.name : "General"} · {fmtDate(a.publishedAt)}
+                      {a.department ? a.department.name : dict.common.general} · {fmtDate(a.publishedAt, locale)}
                     </div>
                   </div>
                 </li>

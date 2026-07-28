@@ -3,9 +3,11 @@ import { notFound, redirect } from "next/navigation"
 import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
-import { canAccessDepartment, ROLE_LABELS } from "@/lib/permissions"
+import { canAccessDepartment } from "@/lib/permissions"
 import { visibleDocumentsWhere } from "@/lib/documents"
 import { DocumentCard } from "@/components/documents/DocumentCard"
+import { getI18n } from "@/lib/i18n/server"
+import { fmt } from "@/lib/i18n/client"
 
 export default async function DepartmentPage({
   params,
@@ -15,6 +17,7 @@ export default async function DepartmentPage({
   const { slug } = await params
   const session = await requireModuleAccess("departments")
   const role = session.user.role as Role
+  const { dict } = await getI18n()
 
   const department = await prisma.department.findUnique({
     where: { slug },
@@ -63,7 +66,7 @@ export default async function DepartmentPage({
         href="/departments"
         style={{ fontSize: "0.85rem", color: "var(--crc-brown)", textDecoration: "none" }}
       >
-        ← Departamentos
+        ← {dict.nav.departments}
       </Link>
 
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", margin: "0.75rem 0 0.25rem" }}>
@@ -75,8 +78,8 @@ export default async function DepartmentPage({
       <p style={{ color: "#777", marginBottom: "0.5rem" }}>{department.description}</p>
       <p style={{ color: "#999", fontSize: "0.85rem", marginBottom: "2rem" }}>
         {department.ownerName
-          ? `Responsable: ${department.ownerName}`
-          : "Sin responsable asignado"}
+          ? fmt(dict.departments.owner, { name: department.ownerName })
+          : dict.departments.noOwner}
       </p>
 
       <div
@@ -95,11 +98,11 @@ export default async function DepartmentPage({
           }}
         >
           <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
-            Equipo ({department.users.length})
+            {dict.departmentDetail.team} ({department.users.length})
           </h2>
           {department.users.length === 0 ? (
             <p style={{ color: "#777", fontSize: "0.85rem", margin: 0 }}>
-              No hay usuarios asignados a este departamento.
+              {dict.departmentDetail.noTeam}
             </p>
           ) : (
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -112,7 +115,7 @@ export default async function DepartmentPage({
                     {u.fullName}
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "#777" }}>{u.email}</div>
-                  <div style={{ fontSize: "0.75rem", color: "#999" }}>{ROLE_LABELS[u.role]}</div>
+                  <div style={{ fontSize: "0.75rem", color: "#999" }}>{dict.roles[u.role]}</div>
                 </li>
               ))}
             </ul>
@@ -128,11 +131,11 @@ export default async function DepartmentPage({
           }}
         >
           <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
-            Enlaces del departamento ({department.systemLinks.length})
+            {dict.departmentDetail.links} ({department.systemLinks.length})
           </h2>
           {department.systemLinks.length === 0 ? (
             <p style={{ color: "#777", fontSize: "0.85rem", margin: 0 }}>
-              Este departamento no tiene enlaces propios todavía.
+              {dict.departmentDetail.noLinks}
             </p>
           ) : (
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -163,7 +166,7 @@ export default async function DepartmentPage({
 
       <section style={{ marginTop: "1rem" }}>
         <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
-          Documentos ({documents.length})
+          {dict.nav.documents} ({documents.length})
         </h2>
         {documents.length === 0 ? (
           <div
@@ -176,7 +179,7 @@ export default async function DepartmentPage({
               border: "1px solid var(--crc-border)",
             }}
           >
-            Este departamento no tiene documentos disponibles todavía.
+            {dict.departmentDetail.noDocuments}
           </div>
         ) : (
           <div

@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
 import Image from "next/image"
 import { safeNext } from "@/lib/safe-redirect"
+import { useI18n } from "@/lib/i18n/client"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { dict } = useI18n()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -35,9 +37,7 @@ export default function LoginPage() {
     setLoading(false)
 
     if (result?.error) {
-      setError(
-        "Correo o contraseña incorrectos. Tras varios intentos la cuenta se bloquea unos minutos; si te pasa, espera o contacta al administrador."
-      )
+      setError(dict.login.error)
       return
     }
 
@@ -82,13 +82,13 @@ export default function LoginPage() {
               className="text-xl font-semibold"
               style={{ color: "var(--crc-brown-dark)" }}
             >
-              Portal de Plataformas Internas
+              {dict.login.title}
             </h1>
             <p
               className="mt-1 text-sm opacity-70"
               style={{ color: "var(--crc-brown)" }}
             >
-              Ingresa con tus credenciales corporativas
+              {dict.login.subtitle}
             </p>
           </div>
 
@@ -98,11 +98,11 @@ export default function LoginPage() {
                 className="text-xs font-medium uppercase tracking-wide"
                 style={{ color: "var(--crc-brown)" }}
               >
-                Correo
+                {dict.login.email}
               </span>
               <input
                 type="email"
-                placeholder="nombre@empresa.com"
+                placeholder={dict.login.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -120,7 +120,7 @@ export default function LoginPage() {
                 className="text-xs font-medium uppercase tracking-wide"
                 style={{ color: "var(--crc-brown)" }}
               >
-                Contraseña
+                {dict.login.password}
               </span>
               <div className="relative">
                 <input
@@ -139,7 +139,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-label={showPassword ? dict.login.hidePassword : dict.login.showPassword}
                   className="absolute inset-y-0 right-0 flex items-center px-3"
                   style={{ color: "var(--crc-brown)" }}
                 >
@@ -170,11 +170,11 @@ export default function LoginPage() {
               className="mt-2 rounded-lg py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
               style={{ backgroundColor: "var(--crc-green)" }}
             >
-              {loading ? "Ingresando..." : "Ingresar"}
+              {loading ? dict.login.submitting : dict.login.submit}
             </button>
 
             <p className="text-center text-xs opacity-70" style={{ color: "var(--crc-brown)" }}>
-              ¿Problemas para ingresar? Contacta al administrador.
+              {dict.login.help}
             </p>
           </div>
         </form>

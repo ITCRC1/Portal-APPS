@@ -1,8 +1,9 @@
 import { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
-import { ROLE_LABELS } from "@/lib/permissions"
 import { createUser, updateUser, toggleUserActive, unlockUser } from "@/lib/actions/users"
 import { ToastForm } from "@/components/ui/ToastForm"
+import { getI18n } from "@/lib/i18n/server"
+import { fmt } from "@/lib/i18n/client"
 import {
   badgeStyle,
   cardStyle,
@@ -29,37 +30,38 @@ export async function UsersPanel() {
     prisma.user.findMany({ orderBy: { createdAt: "desc" }, include: { department: true } }),
     prisma.department.findMany({ where: { status: "active" }, orderBy: { order: "asc" } }),
   ])
+  const { dict } = await getI18n()
 
   return (
     <>
       <section style={cardStyle}>
-        <h2 style={{ ...sectionTitleStyle, marginBottom: "1rem" }}>Crear usuario</h2>
-        <ToastForm action={createUser} success="Usuario creado" style={createFormStyle}>
+        <h2 style={{ ...sectionTitleStyle, marginBottom: "1rem" }}>{dict.adminUsers.createTitle}</h2>
+        <ToastForm action={createUser} success={dict.adminUsers.created} style={createFormStyle}>
           <label style={labelStyle}>
-            Nombre completo
+            {dict.adminUsers.fullName}
             <input name="fullName" required style={inputStyle} />
           </label>
 
           <label style={labelStyle}>
-            Correo
+            {dict.adminUsers.email}
             <input type="email" name="email" required style={inputStyle} />
           </label>
 
           <label style={labelStyle}>
-            Rol
+            {dict.adminUsers.role}
             <select name="role" defaultValue={Role.READ_ONLY_USER} style={inputStyle}>
               {Object.values(Role).map((r) => (
                 <option key={r} value={r}>
-                  {ROLE_LABELS[r]}
+                  {dict.roles[r]}
                 </option>
               ))}
             </select>
           </label>
 
           <label style={labelStyle}>
-            Departamento
+            {dict.adminUsers.department}
             <select name="departmentId" defaultValue="" style={inputStyle}>
-              <option value="">Sin departamento</option>
+              <option value="">{dict.adminUsers.noDepartment}</option>
               {departments.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
@@ -69,7 +71,7 @@ export async function UsersPanel() {
           </label>
 
           <label style={labelStyle}>
-            Contraseña
+            {dict.adminUsers.password}
             <input
               type="text"
               name="password"
@@ -80,16 +82,15 @@ export async function UsersPanel() {
           </label>
 
           <button type="submit" style={createButtonStyle}>
-            Crear usuario
+            {dict.adminUsers.create}
           </button>
         </ToastForm>
       </section>
 
       <section style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Usuarios existentes ({users.length})</h2>
+        <h2 style={sectionTitleStyle}>{fmt(dict.adminUsers.existingTitle, { n: users.length })}</h2>
         <p style={sectionHintStyle}>
-          Edita lo que necesites y pulsa Guardar en esa fila. La contraseña solo cambia si escribes
-          una nueva; si dejas el campo vacío, se conserva la actual.
+          {dict.adminUsers.hint}
         </p>
 
         {/* table-layout: fixed + anchos en % => la tabla siempre cabe, sin scroll horizontal.
@@ -109,12 +110,12 @@ export async function UsersPanel() {
           </colgroup>
           <thead>
             <tr style={theadRowStyle}>
-              <th style={thStyle}>Nombre</th>
-              <th style={thStyle}>Correo</th>
-              <th style={thStyle}>Rol</th>
-              <th style={thStyle}>Departamento</th>
-              <th style={thStyle}>Estado</th>
-              <th style={thStyle}>Nueva clave</th>
+              <th style={thStyle}>{dict.adminUsers.colName}</th>
+              <th style={thStyle}>{dict.adminUsers.email}</th>
+              <th style={thStyle}>{dict.adminUsers.role}</th>
+              <th style={thStyle}>{dict.adminUsers.department}</th>
+              <th style={thStyle}>{dict.adminUsers.colStatus}</th>
+              <th style={thStyle}>{dict.adminUsers.colNewPassword}</th>
               <th style={thStyle}></th>
               <th style={thStyle}></th>
             </tr>
@@ -154,7 +155,7 @@ export async function UsersPanel() {
                     <select form={editFormId} name="role" defaultValue={u.role} style={cellInputStyle}>
                       {Object.values(Role).map((r) => (
                         <option key={r} value={r}>
-                          {ROLE_LABELS[r]}
+                          {dict.roles[r]}
                         </option>
                       ))}
                     </select>
@@ -166,7 +167,7 @@ export async function UsersPanel() {
                       defaultValue={u.departmentId ?? ""}
                       style={cellInputStyle}
                     >
-                      <option value="">Sin departamento</option>
+                      <option value="">{dict.adminUsers.noDepartment}</option>
                       {departments.map((d) => (
                         <option key={d.id} value={d.id}>
                           {d.name}
@@ -175,10 +176,10 @@ export async function UsersPanel() {
                     </select>
                   </td>
                   <td style={tdStyle}>
-                    <span style={badgeStyle(u.isActive)}>{u.isActive ? "Activo" : "Inactivo"}</span>
+                    <span style={badgeStyle(u.isActive)}>{u.isActive ? dict.common.active : dict.common.inactive}</span>
                     {isLocked && (
                       <div style={{ fontSize: "0.65rem", color: "#a33", marginTop: "0.2rem", whiteSpace: "nowrap" }}>
-                        🔒 Bloqueado
+                        🔒 {dict.adminUsers.lockedLabel}
                       </div>
                     )}
                   </td>
@@ -187,36 +188,36 @@ export async function UsersPanel() {
                       form={editFormId}
                       type="text"
                       name="password"
-                      placeholder="Sin cambios"
-                      title="Escribe una clave nueva solo si quieres cambiarla"
+                      placeholder={dict.adminUsers.passwordNoChange}
+                      title={dict.adminUsers.passwordHint}
                       style={cellInputStyle}
                     />
                   </td>
                   <td style={tdStyle}>
-                    <ToastForm id={editFormId} action={updateUser} success="Usuario actualizado">
+                    <ToastForm id={editFormId} action={updateUser} success={dict.adminUsers.updated}>
                       <input type="hidden" name="userId" value={u.id} />
                       <button type="submit" style={primaryButtonStyle}>
-                        Guardar
+                        {dict.adminUsers.save}
                       </button>
                     </ToastForm>
                   </td>
                   <td style={tdStyle}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                      <ToastForm action={toggleUserActive} success="Estado actualizado">
+                      <ToastForm action={toggleUserActive} success={dict.adminUsers.statusUpdated}>
                         <input type="hidden" name="userId" value={u.id} />
                         <input type="hidden" name="nextActive" value={(!u.isActive).toString()} />
                         <button type="submit" style={{ ...outlineButtonStyle, width: "100%" }}>
-                          {u.isActive ? "Desactivar" : "Activar"}
+                          {u.isActive ? dict.adminUsers.deactivate : dict.adminUsers.activate}
                         </button>
                       </ToastForm>
                       {isLocked && (
-                        <ToastForm action={unlockUser} success="Cuenta desbloqueada">
+                        <ToastForm action={unlockUser} success={dict.adminUsers.unlocked}>
                           <input type="hidden" name="userId" value={u.id} />
                           <button
                             type="submit"
                             style={{ ...outlineButtonStyle, width: "100%", borderColor: "var(--crc-green)", color: "var(--crc-green)" }}
                           >
-                            Desbloquear
+                            {dict.adminUsers.unlock}
                           </button>
                         </ToastForm>
                       )}

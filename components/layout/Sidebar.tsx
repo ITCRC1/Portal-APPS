@@ -4,7 +4,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import type { Role } from "@prisma/client"
-import { MODULES, getAccessibleModules, ROLE_LABELS, type ModuleKey } from "@/lib/permissions"
+import { MODULES, getAccessibleModules, type ModuleKey } from "@/lib/permissions"
+import { useI18n } from "@/lib/i18n/client"
 
 type Props = {
   role: Role
@@ -85,6 +86,7 @@ function NavIcon({ k }: { k: ModuleKey }) {
 
 export function Sidebar({ role, drawerOpen = false, onNavigate }: Props) {
   const pathname = usePathname()
+  const { dict } = useI18n()
   const accessible = getAccessibleModules(role)
   const links = MODULES.filter((m) => accessible.includes(m.key))
 
@@ -122,7 +124,7 @@ export function Sidebar({ role, drawerOpen = false, onNavigate }: Props) {
           marginBottom: "0.6rem",
         }}
       >
-        Menú
+        {dict.nav.menu}
       </div>
 
       <nav style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
@@ -150,7 +152,7 @@ export function Sidebar({ role, drawerOpen = false, onNavigate }: Props) {
               }}
             >
               <NavIcon k={l.key} />
-              {l.label}
+              {dict.nav[l.key]}
             </Link>
           )
         })}
@@ -167,7 +169,7 @@ export function Sidebar({ role, drawerOpen = false, onNavigate }: Props) {
           padding: "1.25rem 0.75rem 0",
         }}
       >
-        {ROLE_LABELS[role]}
+        {dict.roles[role]}
       </div>
     </aside>
   )

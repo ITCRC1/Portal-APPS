@@ -1,10 +1,11 @@
-import { LEVEL_LABELS } from "@/lib/announcements"
 import {
   toggleAnnouncementStatus,
   toggleAnnouncementPinned,
   deleteAnnouncement,
 } from "@/lib/actions/announcements"
 import { ToastForm } from "@/components/ui/ToastForm"
+import { getI18n } from "@/lib/i18n/server"
+import { fmt } from "@/lib/i18n/client"
 
 type AnnouncementData = {
   id: string
@@ -25,8 +26,8 @@ const LEVEL_COLORS: Record<string, { border: string; bg: string; fg: string }> =
   critical: { border: "#c96b5a", bg: "#f6e0dd", fg: "#a33" },
 }
 
-function fmt(date: Date): string {
-  return date.toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" })
+function fmtDate(date: Date, locale: string): string {
+  return date.toLocaleDateString(locale === "es" ? "es-CR" : "en-US", { day: "2-digit", month: "short", year: "numeric" })
 }
 
 const smallBtn = {
@@ -40,13 +41,14 @@ const smallBtn = {
   whiteSpace: "nowrap" as const,
 }
 
-export function AnnouncementCard({
+export async function AnnouncementCard({
   announcement: a,
   canManage,
 }: {
   announcement: AnnouncementData
   canManage: boolean
 }) {
+  const { locale, dict } = await getI18n()
   const c = LEVEL_COLORS[a.level] ?? LEVEL_COLORS.info
   const archived = a.status !== "active"
   const expired = a.expiresAt && a.expiresAt.getTime() < Date.now()
@@ -68,7 +70,7 @@ export function AnnouncementCard({
       }}
     >
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-        {a.pinned && <span title="Fijado" style={{ fontSize: "0.9rem" }}>📌</span>}
+        {a.pinned && <span title={dict.announcementCard.pinned} style={{ fontSize: "0.9rem" }}>📌</span>}
         <span
           style={{
             padding: "0.12rem 0.5rem",
@@ -79,7 +81,7 @@ export function AnnouncementCard({
             color: c.fg,
           }}
         >
-          {LEVEL_LABELS[a.level] ?? a.level}
+          {dict.announcementLevel[a.level as keyof typeof dict.announcementLevel] ?? a.level}
         </span>
         <span
           style={{
@@ -91,13 +93,13 @@ export function AnnouncementCard({
             color: "#7a6a58",
           }}
         >
-          {a.department ? a.department.name : "General"}
+          {a.department ? a.department.name : dict.common.general}
         </span>
-        {archived && <span style={{ fontSize: "0.7rem", color: "#a33", fontWeight: 600 }}>Archivado</span>}
+        {archived && <span style={{ fontSize: "0.7rem", color: "#a33", fontWeight: 600 }}>{dict.announcementCard.archived}</span>}
         {!archived && expired && (
-          <span style={{ fontSize: "0.7rem", color: "#a33", fontWeight: 600 }}>Vencido</span>
+          <span style={{ fontSize: "0.7rem", color: "#a33", fontWeight: 600 }}>{dict.announcementCard.expired}</span>
         )}
-        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#aaa" }}>{fmt(a.publishedAt)}</span>
+        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#aaa" }}>{fmtDate(a.publishedAt, locale)}</span>
       </div>
 
       <h3 style={{ margin: 0, fontSize: "1rem", color: "var(--crc-brown-dark)" }}>{a.title}</h3>
@@ -106,30 +108,30 @@ export function AnnouncementCard({
       </p>
 
       <div style={{ fontSize: "0.72rem", color: "#aaa" }}>
-        {a.publishedBy ? `Publicado por ${a.publishedBy.fullName}` : "Publicado"}
-        {a.expiresAt ? ` · Vence ${fmt(a.expiresAt)}` : ""}
+        {a.publishedBy ? fmt(dict.announcementCard.publishedBy, { name: a.publishedBy.fullName }) : dict.announcementCard.published}
+        {a.expiresAt ? ` · ${fmt(dict.announcementCard.expiresOn, { date: fmtDate(a.expiresAt, locale) })}` : ""}
       </div>
 
       {canManage && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.2rem" }}>
-          <ToastForm action={toggleAnnouncementPinned} success="Aviso actualizado">
+          <ToastForm action={toggleAnnouncementPinned} success={dict.announcementCard.updated}>
             <input type="hidden" name="announcementId" value={a.id} />
             <input type="hidden" name="pinned" value={a.pinned ? "false" : "true"} />
             <button type="submit" style={smallBtn}>
-              {a.pinned ? "Quitar fijado" : "Fijar"}
+              {a.pinned ? dict.announcementCard.unpin : dict.announcementCard.pin}
             </button>
           </ToastForm>
-          <ToastForm action={toggleAnnouncementStatus} success="Aviso actualizado">
+          <ToastForm action={toggleAnnouncementStatus} success={dict.announcementCard.updated}>
             <input type="hidden" name="announcementId" value={a.id} />
             <input type="hidden" name="nextStatus" value={archived ? "active" : "archived"} />
             <button type="submit" style={smallBtn}>
-              {archived ? "Reactivar" : "Archivar"}
+              {archived ? dict.announcementCard.reactivate : dict.announcementCard.archive}
             </button>
           </ToastForm>
-          <ToastForm action={deleteAnnouncement} success="Aviso eliminado" style={{ marginLeft: "auto" }}>
+          <ToastForm action={deleteAnnouncement} success={dict.announcementCard.deleted} style={{ marginLeft: "auto" }}>
             <input type="hidden" name="announcementId" value={a.id} />
             <button type="submit" style={{ ...smallBtn, border: "1px solid #d9b3b3", color: "#a33" }}>
-              Eliminar
+              {dict.announcementCard.delete}
             </button>
           </ToastForm>
         </div>

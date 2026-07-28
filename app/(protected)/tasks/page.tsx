@@ -5,12 +5,11 @@ import { canViewAllDepartments } from "@/lib/permissions"
 import {
   visibleTasksWhere,
   canModifyTask,
-  STATUS_LABELS,
   TASK_STATUSES,
   TASK_PRIORITIES,
-  PRIORITY_LABELS,
   type TaskStatus,
 } from "@/lib/tasks"
+import { getI18n } from "@/lib/i18n/server"
 import { createTask } from "@/lib/actions/tasks"
 import { TaskCard } from "@/components/tasks/TaskCard"
 import { ToastForm } from "@/components/ui/ToastForm"
@@ -33,6 +32,7 @@ export default async function TasksPage({
   const role = session.user.role as Role
   const userDepartmentId = session.user.departmentId
   const isCorporate = canViewAllDepartments(role)
+  const { dict } = await getI18n()
 
   const { assignee, status } = await searchParams
   const statusFilter = TASK_STATUSES.includes(status as TaskStatus) ? (status as TaskStatus) : null
@@ -84,50 +84,48 @@ export default async function TasksPage({
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <div>
         <h1 style={{ color: "var(--crc-brown-dark)", fontSize: "1.5rem", marginBottom: "0.25rem" }}>
-          Tareas
+          {dict.nav.tasks}
         </h1>
         <p style={{ color: "#777", margin: 0 }}>
-          {isCorporate
-            ? "Tareas de todos los departamentos."
-            : "Tareas de tu departamento y las generales de la empresa."}
+          {isCorporate ? dict.tasks.subtitleCorporate : dict.tasks.subtitlePersonal}
         </p>
       </div>
 
       <section style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Nueva tarea</h2>
-        <p style={sectionHintStyle}>Se crea en estado &ldquo;Pendiente&rdquo;. El título es obligatorio.</p>
-        <ToastForm action={createTask} success="Tarea creada" style={createFormStyle}>
+        <h2 style={sectionTitleStyle}>{dict.tasks.newTitle}</h2>
+        <p style={sectionHintStyle}>{dict.tasks.newHint}</p>
+        <ToastForm action={createTask} success={dict.tasks.success} style={createFormStyle}>
           <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
-            Título
-            <input name="title" required placeholder="¿Qué hay que hacer?" style={inputStyle} />
+            {dict.tasks.fieldTitle}
+            <input name="title" required placeholder={dict.tasks.titlePlaceholder} style={inputStyle} />
           </label>
 
           <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
-            Descripción
-            <input name="description" placeholder="Detalle opcional" style={inputStyle} />
+            {dict.tasks.fieldDescription}
+            <input name="description" placeholder={dict.tasks.descriptionPlaceholder} style={inputStyle} />
           </label>
 
           <label style={labelStyle}>
-            Prioridad
+            {dict.tasks.fieldPriority}
             <select name="priority" defaultValue="medium" style={inputStyle}>
               {TASK_PRIORITIES.map((p) => (
                 <option key={p} value={p}>
-                  {PRIORITY_LABELS[p]}
+                  {dict.taskPriority[p]}
                 </option>
               ))}
             </select>
           </label>
 
           <label style={labelStyle}>
-            Fecha límite
+            {dict.tasks.fieldDueDate}
             <input type="date" name="dueDate" style={inputStyle} />
           </label>
 
           {isCorporate && (
             <label style={labelStyle}>
-              Departamento
+              {dict.tasks.fieldDepartment}
               <select name="departmentId" defaultValue="" style={inputStyle}>
-                <option value="">General (sin departamento)</option>
+                <option value="">{dict.tasks.departmentGeneral}</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
@@ -138,9 +136,9 @@ export default async function TasksPage({
           )}
 
           <label style={labelStyle}>
-            Responsable
+            {dict.tasks.fieldAssignee}
             <select name="assignedToId" defaultValue="" style={inputStyle}>
-              <option value="">Sin asignar</option>
+              <option value="">{dict.tasks.unassigned}</option>
               {assignableUsers.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.fullName}
@@ -150,7 +148,7 @@ export default async function TasksPage({
           </label>
 
           <button type="submit" style={createButtonStyle}>
-            Crear tarea
+            {dict.tasks.create}
           </button>
         </ToastForm>
       </section>
@@ -161,10 +159,10 @@ export default async function TasksPage({
           style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "end" }}
         >
           <label style={{ ...labelStyle, minWidth: 180 }}>
-            Responsable
+            {dict.tasks.fieldAssignee}
             <select name="assignee" defaultValue={assignee ?? ""} style={inputStyle}>
-              <option value="">Todos</option>
-              <option value="unassigned">Sin asignar</option>
+              <option value="">{dict.common.all}</option>
+              <option value="unassigned">{dict.tasks.unassigned}</option>
               {assignableOptions.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name}
@@ -174,26 +172,26 @@ export default async function TasksPage({
           </label>
 
           <label style={{ ...labelStyle, minWidth: 160 }}>
-            Estado
+            {dict.tasks.filterStatus}
             <select name="status" defaultValue={statusFilter ?? ""} style={inputStyle}>
-              <option value="">Todos</option>
+              <option value="">{dict.common.all}</option>
               {TASK_STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {STATUS_LABELS[s]}
+                  {dict.taskStatus[s]}
                 </option>
               ))}
             </select>
           </label>
 
           <button type="submit" style={{ ...createButtonStyle, padding: "0.55rem 1rem" }}>
-            Filtrar
+            {dict.tasks.filter}
           </button>
           {filtersActive && (
             <a
               href="/tasks"
               style={{ fontSize: "0.85rem", color: "var(--crc-brown)", alignSelf: "center" }}
             >
-              Limpiar
+              {dict.tasks.clear}
             </a>
           )}
         </form>
@@ -219,12 +217,12 @@ export default async function TasksPage({
                   marginBottom: "0.75rem",
                 }}
               >
-                <h2 style={{ ...sectionTitleStyle, margin: 0 }}>{STATUS_LABELS[s]}</h2>
+                <h2 style={{ ...sectionTitleStyle, margin: 0 }}>{dict.taskStatus[s]}</h2>
                 <span style={{ color: "#aaa", fontSize: "0.8rem", fontWeight: 600 }}>{items.length}</span>
               </div>
 
               {items.length === 0 ? (
-                <p style={{ color: "#bbb", fontSize: "0.8rem", margin: 0 }}>Sin tareas.</p>
+                <p style={{ color: "#bbb", fontSize: "0.8rem", margin: 0 }}>{dict.tasks.emptyColumn}</p>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                   {items.map((task) => (

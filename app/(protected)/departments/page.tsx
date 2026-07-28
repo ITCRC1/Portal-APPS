@@ -3,11 +3,14 @@ import type { Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireModuleAccess } from "@/lib/require-module-access"
 import { departmentScope, canViewAllDepartments } from "@/lib/permissions"
+import { getI18n } from "@/lib/i18n/server"
+import { fmt } from "@/lib/i18n/client"
 
 export default async function DepartmentsPage() {
   const session = await requireModuleAccess("departments")
   const role = session.user.role as Role
   const scope = departmentScope(role, session.user.departmentId)
+  const { dict } = await getI18n()
 
   // El filtro va dentro de la consulta (PRD 13): nadie recibe filas fuera de su alcance.
   const departments =
@@ -25,12 +28,10 @@ export default async function DepartmentsPage() {
   return (
     <div>
       <h1 style={{ color: "var(--crc-brown-dark)", fontSize: "1.5rem", marginBottom: "0.25rem" }}>
-        Departamentos
+        {dict.nav.departments}
       </h1>
       <p style={{ color: "#777", marginBottom: "2rem" }}>
-        {canViewAllDepartments(role)
-          ? "Todas las áreas de The Costa Rica Collection."
-          : "Tu departamento dentro de The Costa Rica Collection."}
+        {canViewAllDepartments(role) ? dict.departments.subtitleAll : dict.departments.subtitleOwn}
       </p>
 
       {departments.length === 0 ? (
@@ -44,7 +45,7 @@ export default async function DepartmentsPage() {
             border: "1px solid var(--crc-border)",
           }}
         >
-          No tienes un departamento asignado todavía. Pídele a un administrador que te asigne uno.
+          {dict.departments.empty}
         </div>
       ) : (
         <div
@@ -77,11 +78,11 @@ export default async function DepartmentsPage() {
                 {d.description}
               </p>
               <div style={{ fontSize: "0.75rem", color: "#999" }}>
-                {d.ownerName ? `Responsable: ${d.ownerName}` : "Sin responsable asignado"}
+                {d.ownerName ? fmt(dict.departments.owner, { name: d.ownerName }) : dict.departments.noOwner}
               </div>
               <div style={{ fontSize: "0.75rem", color: "#999" }}>
-                {d._count.users} {d._count.users === 1 ? "usuario" : "usuarios"} ·{" "}
-                {d._count.systemLinks} {d._count.systemLinks === 1 ? "enlace" : "enlaces"}
+                {d._count.users} {d._count.users === 1 ? dict.departments.userOne : dict.departments.userMany} ·{" "}
+                {d._count.systemLinks} {d._count.systemLinks === 1 ? dict.departments.linkOne : dict.departments.linkMany}
               </div>
             </Link>
           ))}

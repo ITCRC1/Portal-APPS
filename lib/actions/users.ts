@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { recordAudit } from "@/lib/audit"
 import { emailProblem } from "@/lib/email"
+import { getLocale, getDictionary } from "@/lib/i18n/server"
 
 // Resultado de validación que ToastForm muestra al admin como mensaje de error.
 type ActionError = { ok: false; message: string }
@@ -22,6 +23,7 @@ async function requireSuperAdmin() {
 
 export async function createUser(formData: FormData) {
   await requireSuperAdmin()
+  const dict = getDictionary(await getLocale())
 
   const fullName = String(formData.get("fullName") ?? "").trim()
   const email = String(formData.get("email") ?? "").trim().toLowerCase()
@@ -30,15 +32,15 @@ export async function createUser(formData: FormData) {
   const departmentId = String(formData.get("departmentId") ?? "") || null
 
   if (!fullName || !email || !password) {
-    return fail("Nombre, correo y contraseña son obligatorios")
+    return fail(dict.userErrors.required)
   }
 
   if (password.length < 8) {
-    return fail("La contraseña debe tener al menos 8 caracteres")
+    return fail(dict.userErrors.passwordShort)
   }
 
   if (!Object.values(Role).includes(roleValue as Role)) {
-    return fail("Rol inválido")
+    return fail(dict.userErrors.invalidRole)
   }
 
   const badEmail = await emailProblem(email)
@@ -48,7 +50,7 @@ export async function createUser(formData: FormData) {
 
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
-    return fail("Ese correo ya está registrado")
+    return fail(dict.userErrors.emailTaken)
   }
 
   const passwordHash = await argon2.hash(password)
@@ -76,6 +78,7 @@ export async function createUser(formData: FormData) {
 
 export async function updateUser(formData: FormData) {
   await requireSuperAdmin()
+  const dict = getDictionary(await getLocale())
 
   const userId = String(formData.get("userId") ?? "")
   const fullName = String(formData.get("fullName") ?? "").trim()
@@ -89,15 +92,15 @@ export async function updateUser(formData: FormData) {
   }
 
   if (!fullName || !email) {
-    return fail("Nombre y correo son obligatorios")
+    return fail(dict.userErrors.requiredEdit)
   }
 
   if (password && password.length < 8) {
-    return fail("La contraseña debe tener al menos 8 caracteres")
+    return fail(dict.userErrors.passwordShort)
   }
 
   if (!Object.values(Role).includes(roleValue as Role)) {
-    return fail("Rol inválido")
+    return fail(dict.userErrors.invalidRole)
   }
 
   const badEmail = await emailProblem(email)
@@ -107,7 +110,7 @@ export async function updateUser(formData: FormData) {
 
   const emailOwner = await prisma.user.findUnique({ where: { email } })
   if (emailOwner && emailOwner.id !== userId) {
-    return fail("Ese correo ya está en uso por otro usuario")
+    return fail(dict.userErrors.emailInUse)
   }
 
   await prisma.user.update({
