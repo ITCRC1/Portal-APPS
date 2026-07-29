@@ -120,6 +120,7 @@ export const en: Dictionary = {
   alerts: {
     title: "Alerts & Announcements",
     subtitleManage: "Publish announcements for the whole company or a department.",
+    subtitlePublishOwn: "Publish announcements for your department and property.",
     subtitleView: "Active internal announcements for you and your department.",
     newTitle: "New announcement",
     newHint: "Title and message are required.",

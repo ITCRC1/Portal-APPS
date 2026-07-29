@@ -13,11 +13,27 @@ export const LEVEL_LABELS: Record<string, string> = {
 }
 
 /**
- * ¿Quién puede publicar/editar avisos? Solo los roles corporativos
- * (Super Admin / Ejecutivo); los demás únicamente los leen.
+ * ¿Quién puede PUBLICAR avisos? Todos los roles menos Solo Lectura. Los roles
+ * corporativos (Super Admin / Ejecutivo) publican a toda la empresa o a un
+ * departamento/propiedad cualquiera; los demás quedan acotados a su propio
+ * departamento + propiedad (se fuerza en la acción, ver createAnnouncement).
  */
 export function canPublishAnnouncements(role: Role): boolean {
-  return canViewAllDepartments(role)
+  return role !== "READ_ONLY_USER"
+}
+
+/**
+ * ¿Puede el usuario EDITAR/archivar/fijar/eliminar este aviso en particular?
+ *  - roles corporativos: cualquiera;
+ *  - los demás: solo los avisos que ellos mismos publicaron.
+ */
+export function canModifyAnnouncement(
+  role: Role,
+  userId: string,
+  announcement: { publishedById: string | null }
+): boolean {
+  if (canViewAllDepartments(role)) return true
+  return announcement.publishedById !== null && announcement.publishedById === userId
 }
 
 /**

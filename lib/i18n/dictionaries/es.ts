@@ -119,6 +119,7 @@ export const es = {
   alerts: {
     title: "Avisos y Anuncios",
     subtitleManage: "Publica comunicados para toda la empresa o para un departamento.",
+    subtitlePublishOwn: "Publica avisos para tu departamento y tu propiedad.",
     subtitleView: "Comunicados internos vigentes para ti y tu departamento.",
     newTitle: "Nuevo aviso",
     newHint: "El título y el mensaje son obligatorios.",

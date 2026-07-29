@@ -6,17 +6,42 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { recordAudit } from "@/lib/audit"
 import { notifyAnnouncementPublished } from "@/lib/notifications"
-import { ANNOUNCEMENT_LEVELS, canPublishAnnouncements } from "@/lib/announcements"
+import { canViewAllDepartments, canViewAllProperties } from "@/lib/permissions"
+import {
+  ANNOUNCEMENT_LEVELS,
+  canPublishAnnouncements,
+  canModifyAnnouncement,
+} from "@/lib/announcements"
 
-type Publisher = { id: string; role: Role }
+type Publisher = { id: string; role: Role; departmentId: string | null; propertyId: string | null }
 
 async function requirePublisher(): Promise<Publisher> {
   const session = await auth()
-  const user = session?.user as { id?: string; role?: Role } | undefined
+  const user = session?.user as
+    | { id?: string; role?: Role; departmentId?: string | null; propertyId?: string | null }
+    | undefined
   if (!user?.id || !user.role || !canPublishAnnouncements(user.role)) {
     throw new Error("No autorizado")
   }
-  return { id: user.id, role: user.role }
+  return {
+    id: user.id,
+    role: user.role,
+    departmentId: user.departmentId ?? null,
+    propertyId: user.propertyId ?? null,
+  }
+}
+
+// Autoriza sobre un aviso ya existente: los no corporativos solo pueden tocar los suyos.
+async function requireModifiableAnnouncement(publisher: Publisher, id: string) {
+  const ann = await prisma.announcement.findUnique({
+    where: { id },
+    select: { id: true, publishedById: true },
+  })
+  if (!ann) throw new Error("El aviso no existe")
+  if (!canModifyAnnouncement(publisher.role, publisher.id, ann)) {
+    throw new Error("No autorizado")
+  }
+  return ann
 }
 
 export async function createAnnouncement(formData: FormData) {
@@ -33,8 +58,6 @@ export async function createAnnouncement(formData: FormData) {
   }
 
   const pinned = formData.get("pinned") === "on"
-  const departmentId = String(formData.get("departmentId") ?? "") || null
-  const propertyId = String(formData.get("propertyId") ?? "") || null
 
   const expiresRaw = String(formData.get("expiresAt") ?? "").trim()
   const expiresAt = expiresRaw ? new Date(expiresRaw) : null
@@ -42,18 +65,33 @@ export async function createAnnouncement(formData: FormData) {
     throw new Error("Fecha de vencimiento inválida")
   }
 
-  // El departamento se valida contra los existentes; los roles corporativos pueden
-  // dirigir el aviso a cualquier departamento o dejarlo general (departmentId null).
-  if (departmentId) {
-    const dept = await prisma.department.findUnique({ where: { id: departmentId }, select: { id: true } })
-    if (!dept) throw new Error("Departamento inválido")
+  // Alcance del aviso. Los corporativos eligen (toda la empresa, un departamento,
+  // una propiedad); los demás quedan ATADOS a su propio departamento + propiedad,
+  // ignorando lo que llegue del formulario para que no publiquen fuera de su ámbito.
+  let departmentId: string | null
+  let propertyId: string | null
+
+  if (canViewAllDepartments(publisher.role)) {
+    departmentId = String(formData.get("departmentId") ?? "") || null
+    if (departmentId) {
+      const dept = await prisma.department.findUnique({ where: { id: departmentId }, select: { id: true } })
+      if (!dept) throw new Error("Departamento inválido")
+    }
+  } else {
+    if (!publisher.departmentId) {
+      throw new Error("No tienes un departamento asignado para publicar avisos")
+    }
+    departmentId = publisher.departmentId
   }
 
-  // Igual con la propiedad: solo quien publica (rol corporativo) puede dirigir el
-  // aviso a una propiedad o dejarlo corporativo (propertyId null = todas).
-  if (propertyId) {
-    const prop = await prisma.property.findUnique({ where: { id: propertyId }, select: { id: true } })
-    if (!prop) throw new Error("Propiedad inválida")
+  if (canViewAllProperties(publisher.role)) {
+    propertyId = String(formData.get("propertyId") ?? "") || null
+    if (propertyId) {
+      const prop = await prisma.property.findUnique({ where: { id: propertyId }, select: { id: true } })
+      if (!prop) throw new Error("Propiedad inválida")
+    }
+  } else {
+    propertyId = publisher.propertyId
   }
 
   const created = await prisma.announcement.create({
@@ -85,10 +123,11 @@ export async function createAnnouncement(formData: FormData) {
 }
 
 export async function toggleAnnouncementStatus(formData: FormData) {
-  await requirePublisher()
+  const publisher = await requirePublisher()
 
   const id = String(formData.get("announcementId") ?? "")
   if (!id) throw new Error("Falta el aviso")
+  await requireModifiableAnnouncement(publisher, id)
   const nextStatus = formData.get("nextStatus") === "active" ? "active" : "archived"
 
   const updated = await prisma.announcement.update({ where: { id }, data: { status: nextStatus } })
@@ -105,10 +144,11 @@ export async function toggleAnnouncementStatus(formData: FormData) {
 }
 
 export async function toggleAnnouncementPinned(formData: FormData) {
-  await requirePublisher()
+  const publisher = await requirePublisher()
 
   const id = String(formData.get("announcementId") ?? "")
   if (!id) throw new Error("Falta el aviso")
+  await requireModifiableAnnouncement(publisher, id)
   const pinned = formData.get("pinned") === "true"
 
   const updated = await prisma.announcement.update({ where: { id }, data: { pinned } })
@@ -126,10 +166,11 @@ export async function toggleAnnouncementPinned(formData: FormData) {
 }
 
 export async function deleteAnnouncement(formData: FormData) {
-  await requirePublisher()
+  const publisher = await requirePublisher()
 
   const id = String(formData.get("announcementId") ?? "")
   if (!id) throw new Error("Falta el aviso")
+  await requireModifiableAnnouncement(publisher, id)
 
   const ann = await prisma.announcement.findUnique({ where: { id }, select: { title: true } })
   await prisma.announcement.delete({ where: { id } })
