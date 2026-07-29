@@ -19,10 +19,12 @@ export default async function DepartmentPage({
   const role = session.user.role as Role
   const { dict } = await getI18n()
 
-  // Aislamiento por propiedad: el equipo y los enlaces del departamento se acotan a
-  // la propiedad del usuario (+ lo corporativo). Los roles globales lo ven todo.
+  // Aislamiento por propiedad: el equipo se acota a la propiedad del usuario
+  // (+ lo corporativo). Los roles globales lo ven todo.
   const propFilter = propertyWhere(role, session.user.propertyId)
   const propScoped = "OR" in propFilter ? propFilter : {}
+  // Cláusula de propiedad reutilizable para combinar con AND en enlaces/documentos.
+  const propAnd = "OR" in propFilter ? [propFilter] : []
 
   const department = await prisma.department.findUnique({
     where: { slug },
@@ -31,10 +33,6 @@ export default async function DepartmentPage({
         where: { isActive: true, ...propScoped },
         orderBy: { fullName: "asc" },
         select: { id: true, fullName: true, email: true, role: true },
-      },
-      systemLinks: {
-        where: { isActive: true, ...propScoped },
-        orderBy: { order: "asc" },
       },
     },
   })
@@ -48,25 +46,36 @@ export default async function DepartmentPage({
     redirect("/departments")
   }
 
-  // Solo los documentos de esta área que el usuario tiene permitido ver.
-  const documents = await prisma.document.findMany({
-    where: {
-      AND: [
-        visibleDocumentsWhere(role, session.user.departmentId, session.user.propertyId),
-        { departmentId: department.id },
-      ],
-    },
-    orderBy: [{ order: "asc" }, { name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      category: true,
-      fileName: true,
-      size: true,
-      confidentiality: true,
-    },
-  })
+  // Por ahora se muestran también los enlaces y documentos generales/corporativos
+  // (sin departamento) además de los propios de esta área. Cuando cada cosa se
+  // asigne a su departamento, esta vista se acota sola (basta el filtro por
+  // departamento; no hay que tocar código).
+  const deptOrGeneral = { OR: [{ departmentId: department.id }, { departmentId: null }] }
+
+  const [systemLinks, documents] = await Promise.all([
+    prisma.systemLink.findMany({
+      where: { isActive: true, AND: [deptOrGeneral, ...propAnd] },
+      orderBy: { order: "asc" },
+    }),
+    prisma.document.findMany({
+      where: {
+        AND: [
+          visibleDocumentsWhere(role, session.user.departmentId, session.user.propertyId),
+          deptOrGeneral,
+        ],
+      },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        category: true,
+        fileName: true,
+        size: true,
+        confidentiality: true,
+      },
+    }),
+  ])
 
   return (
     <div>
@@ -141,15 +150,15 @@ export default async function DepartmentPage({
           }}
         >
           <h2 style={{ fontSize: "1.05rem", color: "var(--crc-brown-dark)", marginBottom: "1rem" }}>
-            {dict.departmentDetail.links} ({department.systemLinks.length})
+            {dict.departmentDetail.links} ({systemLinks.length})
           </h2>
-          {department.systemLinks.length === 0 ? (
+          {systemLinks.length === 0 ? (
             <p style={{ color: "#777", fontSize: "0.85rem", margin: 0 }}>
               {dict.departmentDetail.noLinks}
             </p>
           ) : (
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {department.systemLinks.map((l) => (
+              {systemLinks.map((l) => (
                 <li key={l.id} style={{ padding: "0.5rem 0", borderBottom: "1px solid #f0ebe3" }}>
                   <a
                     href={l.url}

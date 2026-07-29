@@ -63,7 +63,9 @@ export default async function DepartmentsPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            // auto-fill (no auto-fit): con una sola tarjeta no se estira a todo el
+            // ancho; conserva su tamaño y deja el resto de la fila vacío.
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 320px))",
             gap: "1rem",
           }}
         >
