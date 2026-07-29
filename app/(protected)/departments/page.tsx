@@ -60,16 +60,7 @@ export default async function DepartmentsPage() {
           {dict.departments.empty}
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            // auto-fit para que varias tarjetas llenen la fila (vista de super admin),
-            // pero con tope de 460px por columna para que una sola tarjeta no se
-            // estire a todo el ancho como un banner.
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 460px))",
-            gap: "1rem",
-          }}
-        >
+        <div className="crc-dept-grid">
           {departments.map((d) => (
             <Link
               key={d.id}
