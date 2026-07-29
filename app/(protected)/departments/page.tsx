@@ -63,9 +63,10 @@ export default async function DepartmentsPage() {
         <div
           style={{
             display: "grid",
-            // auto-fill (no auto-fit): con una sola tarjeta no se estira a todo el
-            // ancho; conserva su tamaño y deja el resto de la fila vacío.
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 320px))",
+            // auto-fit para que varias tarjetas llenen la fila (vista de super admin),
+            // pero con tope de 460px por columna para que una sola tarjeta no se
+            // estire a todo el ancho como un banner.
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 460px))",
             gap: "1rem",
           }}
         >
