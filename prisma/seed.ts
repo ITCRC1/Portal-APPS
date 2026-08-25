@@ -152,9 +152,12 @@ async function main() {
       order: 2,
     },
     {
-      name: 'Manual de Operaciones',
+      // Antes "Manual de Operaciones"; el contenido son SOP (Standard Operating
+      // Procedures), no un manual. El upsert es por URL, así que al re-sembrar se
+      // actualiza el nombre/descripción del enlace ya existente.
+      name: 'Procedimientos Operativos Estándar',
       url: 'https://ops.thecostaricacollection.com/',
-      description: 'Manuales y procedimientos operativos de CRC.',
+      description: 'Procedimientos estándar de operación (SOP) de CRC.',
       icon: '📖',
       order: 3,
     },
@@ -165,6 +168,30 @@ async function main() {
       description: 'Reporte diario de operación.',
       icon: '📊',
       order: 4,
+    },
+    {
+      // Generador de contratos y documentos laborales (RRHH), multi-propiedad.
+      name: 'Gestión de RRHH',
+      url: 'https://sdg-rh-management.up.railway.app/',
+      description: 'Generación de contratos y documentos laborales del personal.',
+      icon: '👥',
+      order: 5,
+    },
+    {
+      // Planificación financiera específica de Corcovado Wilderness Lodge.
+      name: 'FinPlan CWL',
+      url: 'https://finplan-cwl.up.railway.app/',
+      description: 'Planificación financiera, flujo de caja y forecast de Corcovado Wilderness Lodge.',
+      icon: '📈',
+      order: 6,
+    },
+    {
+      // Operación diaria (reservas, tours, logística) de Corcovado Wilderness Lodge.
+      name: 'Operaciones CWL',
+      url: 'https://cwl-ops.up.railway.app/',
+      description: 'Reservas, tours, logística y operación diaria de Corcovado Wilderness Lodge.',
+      icon: '🏨',
+      order: 7,
     },
   ]
 
