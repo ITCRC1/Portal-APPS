@@ -159,6 +159,7 @@ async function main() {
       description: 'Gestión y pago de tours y experiencias de los huéspedes.',
       icon: '🗺️',
       order: 2,
+      propertySlug: 'corcovado-wilderness-lodge',
     },
     {
       // Antes "Manual de Operaciones"; el contenido son SOP (Standard Operating
@@ -169,6 +170,7 @@ async function main() {
       description: 'Procedimientos estándar de operación (SOP) de CRC.',
       icon: '📖',
       order: 3,
+      propertySlug: 'corcovado-wilderness-lodge',
     },
     {
       // App sin dominio corporativo (por ahora): sin SSO, solo enlace directo.
@@ -177,6 +179,7 @@ async function main() {
       description: 'Reporte diario de operación.',
       icon: '📊',
       order: 4,
+      propertySlug: 'corcovado-wilderness-lodge',
     },
     {
       // Generador de contratos y documentos laborales (RRHH), multi-propiedad.
@@ -185,6 +188,7 @@ async function main() {
       description: 'Generación de contratos y documentos laborales del personal.',
       icon: '👥',
       order: 5,
+      propertySlug: 'corcovado-wilderness-lodge',
     },
     {
       // Planificación financiera específica de Corcovado Wilderness Lodge.
