@@ -1,5 +1,5 @@
 import type { Prisma, Role } from "@prisma/client"
-import { departmentScope, propertyWhere } from "@/lib/permissions"
+import { departmentScope, propertyWhere, isManagerRole } from "@/lib/permissions"
 
 /**
  * Filtro Prisma para listar solo los documentos que el usuario puede ver.
@@ -23,6 +23,10 @@ export function visibleDocumentsWhere(
     const or: Prisma.DocumentWhereInput[] = [{ confidentiality: "public-internal" }]
     if (scope.kind === "department") {
       or.push({ confidentiality: "department", departmentId: scope.departmentId })
+      // La jefatura del departamento ve además los de nivel "solo gerencia".
+      if (isManagerRole(role)) {
+        or.push({ confidentiality: "managers", departmentId: scope.departmentId })
+      }
     }
     clauses.push({ OR: or })
   }

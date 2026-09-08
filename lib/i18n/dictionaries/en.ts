@@ -52,6 +52,7 @@ export const en: Dictionary = {
   confidentiality: {
     "public-internal": "Internal public",
     department: "Department only",
+    managers: "Department managers only",
     executive: "Executives only",
     confidential: "Confidential",
     "highly-confidential": "Highly confidential",
@@ -328,7 +329,7 @@ export const en: Dictionary = {
     visibility: "Who can see it",
     upload: "Upload document",
     existingTitle: "Documents ({n})",
-    manageHint: "Download to review, deactivate to hide without deleting, or delete permanently.",
+    manageHint: "Change property, department or visibility and click Save on that row. You can also download, hide, or delete.",
     empty: "No documents yet.",
     colName: "Name",
     colVisibility: "Visibility",

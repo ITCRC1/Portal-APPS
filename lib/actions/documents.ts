@@ -120,6 +120,47 @@ export async function createDocument(formData: FormData) {
   revalidatePath("/documents")
 }
 
+// Reclasifica un documento ya subido: su propiedad, departamento y visibilidad.
+// No toca el archivo en sí. Solo Super Admin.
+export async function updateDocument(formData: FormData) {
+  await requireSuperAdminId()
+
+  const id = String(formData.get("documentId") ?? "")
+  if (!id) throw new Error("Falta el documento")
+
+  const departmentId = String(formData.get("departmentId") ?? "") || null
+  const propertyId = String(formData.get("propertyId") ?? "") || null
+  const confidentiality = String(formData.get("confidentiality") ?? "department")
+
+  if (!(confidentiality in CONFIDENTIALITY_LABELS)) {
+    throw new Error("Nivel de confidencialidad inválido")
+  }
+  if (departmentId) {
+    const dept = await prisma.department.findUnique({ where: { id: departmentId }, select: { id: true } })
+    if (!dept) throw new Error("Departamento inválido")
+  }
+  if (propertyId) {
+    const prop = await prisma.property.findUnique({ where: { id: propertyId }, select: { id: true } })
+    if (!prop) throw new Error("Propiedad inválida")
+  }
+
+  const updated = await prisma.document.update({
+    where: { id },
+    data: { departmentId, propertyId, confidentiality },
+  })
+
+  await recordAudit({
+    action: "updated",
+    entityType: "document",
+    entityId: id,
+    entityLabel: updated.name,
+    details: CONFIDENTIALITY_LABELS[confidentiality] ?? confidentiality,
+  })
+
+  revalidatePath("/admin")
+  revalidatePath("/documents")
+}
+
 export async function toggleDocumentStatus(formData: FormData) {
   await requireSuperAdminId()
 

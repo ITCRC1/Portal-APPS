@@ -1,16 +1,18 @@
 import { prisma } from "@/lib/prisma"
-import { createDocument, toggleDocumentStatus, deleteDocument } from "@/lib/actions/documents"
+import { createDocument, updateDocument, toggleDocumentStatus, deleteDocument } from "@/lib/actions/documents"
 import { ToastForm } from "@/components/ui/ToastForm"
 import { getI18n } from "@/lib/i18n/server"
 import { fmt } from "@/lib/i18n/format"
 import {
   badgeStyle,
   cardStyle,
+  cellInputStyle,
   createButtonStyle,
   createFormStyle,
   inputStyle,
   labelStyle,
   outlineButtonStyle,
+  primaryButtonStyle,
   sectionHintStyle,
   sectionTitleStyle,
   tableStyle,
@@ -52,6 +54,9 @@ export async function DocumentsPanel() {
         category: true,
         confidentiality: true,
         status: true,
+        updatedAt: true,
+        departmentId: true,
+        propertyId: true,
         department: { select: { name: true } },
         property: { select: { name: true } },
       },
@@ -127,7 +132,9 @@ export async function DocumentsPanel() {
 
           <label style={labelStyle}>
             {dict.adminDocuments.visibility}
-            <select name="confidentiality" defaultValue="public-internal" style={inputStyle}>
+            {/* Default seguro: "Solo del departamento" (antes era "Interno público",
+                que dejaba todo visible para todos por descuido). */}
+            <select name="confidentiality" defaultValue="department" style={inputStyle}>
               {Object.entries(dict.confidentiality).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -155,15 +162,16 @@ export async function DocumentsPanel() {
           <div className="crc-table-wrap">
           <table style={tableStyle}>
             <colgroup>
-              <col style={{ width: "22%" }} />
-              <col style={{ width: "11%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "12%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "9%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "6%" }} />
               <col style={{ width: "7%" }} />
-              <col style={{ width: "8%" }} />
-              <col style={{ width: "8%" }} />
-              <col style={{ width: "8%" }} />
+              <col style={{ width: "7%" }} />
+              <col style={{ width: "6.5%" }} />
+              <col style={{ width: "6.5%" }} />
             </colgroup>
             <thead>
               <tr style={theadRowStyle}>
@@ -176,13 +184,18 @@ export async function DocumentsPanel() {
                 <th style={thStyle}></th>
                 <th style={thStyle}></th>
                 <th style={thStyle}></th>
+                <th style={thStyle}></th>
               </tr>
             </thead>
             <tbody>
               {documents.map((d) => {
                 const isActive = d.status === "active"
+                // Los campos de propiedad/departamento/visibilidad se asocian al form
+                // de su fila con el atributo form; updatedAt en la key hace que el form
+                // vuelva a montar con los valores nuevos tras guardar.
+                const editFormId = `edit-doc-${d.id}`
                 return (
-                  <tr key={d.id} style={tbodyRowStyle}>
+                  <tr key={`${d.id}-${d.updatedAt.toISOString()}`} style={tbodyRowStyle}>
                     <td style={tdStyle}>
                       <div style={{ fontWeight: 600, color: "var(--crc-brown-dark)", fontSize: "0.82rem" }}>
                         {d.name}
@@ -192,17 +205,60 @@ export async function DocumentsPanel() {
                       </div>
                     </td>
                     <td style={{ ...tdStyle, fontSize: "0.78rem", color: "#555" }}>{d.category}</td>
-                    <td style={{ ...tdStyle, fontSize: "0.78rem", color: "#555" }}>
-                      {d.department?.name ?? dict.common.general}
+                    <td style={tdStyle}>
+                      <select
+                        form={editFormId}
+                        name="departmentId"
+                        defaultValue={d.departmentId ?? ""}
+                        style={cellInputStyle}
+                      >
+                        <option value="">{dict.adminDocuments.noDepartment}</option>
+                        {departments.map((dep) => (
+                          <option key={dep.id} value={dep.id}>
+                            {dep.name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
-                    <td style={{ ...tdStyle, fontSize: "0.78rem", color: "#555" }}>
-                      {d.property?.name ?? dict.adminDocuments.propertyAll}
+                    <td style={tdStyle}>
+                      <select
+                        form={editFormId}
+                        name="propertyId"
+                        defaultValue={d.propertyId ?? ""}
+                        style={cellInputStyle}
+                      >
+                        <option value="">{dict.adminDocuments.propertyAll}</option>
+                        {properties.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
-                    <td style={{ ...tdStyle, fontSize: "0.75rem", color: "#555" }}>
-                      {dict.confidentiality[d.confidentiality as keyof typeof dict.confidentiality] ?? d.confidentiality}
+                    <td style={tdStyle}>
+                      <select
+                        form={editFormId}
+                        name="confidentiality"
+                        defaultValue={d.confidentiality}
+                        style={cellInputStyle}
+                      >
+                        {Object.entries(dict.confidentiality).map(([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td style={tdStyle}>
                       <span style={badgeStyle(isActive)}>{isActive ? dict.common.active : dict.adminDocuments.hidden}</span>
+                    </td>
+                    <td style={tdStyle}>
+                      <ToastForm id={editFormId} action={updateDocument} success={dict.adminDocuments.updated}>
+                        <input type="hidden" name="documentId" value={d.id} />
+                        <button type="submit" style={primaryButtonStyle}>
+                          {dict.adminUsers.save}
+                        </button>
+                      </ToastForm>
                     </td>
                     <td style={tdStyle}>
                       <a

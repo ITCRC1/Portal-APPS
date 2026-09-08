@@ -163,6 +163,9 @@ export function propertyMatches(
 export const CONFIDENTIALITY = {
   PUBLIC_INTERNAL: "public-internal",
   DEPARTMENT: "department",
+  // Dentro del departamento, solo la jefatura (Gerente de Departamento) + corporativos.
+  // Pensado para contratos y papeles que ni todo el departamento debe ver.
+  MANAGERS: "managers",
   EXECUTIVE: "executive",
   CONFIDENTIAL: "confidential",
   HIGHLY_CONFIDENTIAL: "highly-confidential",
@@ -173,9 +176,16 @@ export type Confidentiality = (typeof CONFIDENTIALITY)[keyof typeof CONFIDENTIAL
 export const CONFIDENTIALITY_LABELS: Record<string, string> = {
   "public-internal": "Interno público",
   department: "Solo del departamento",
+  managers: "Solo gerencia del departamento",
   executive: "Solo ejecutivos",
   confidential: "Confidencial",
   "highly-confidential": "Altamente confidencial",
+}
+
+// Roles de jefatura (dentro de un departamento). Los corporativos (Super Admin /
+// Ejecutivo) se manejan aparte porque ya ven todo.
+export function isManagerRole(role: Role): boolean {
+  return role === "DEPARTMENT_MANAGER"
 }
 
 /**
@@ -203,6 +213,13 @@ export function canAccessDocument(
     // Solo su propio departamento.
     case CONFIDENTIALITY.DEPARTMENT:
       return doc.departmentId !== null && doc.departmentId === userDepartmentId
+    // Solo la jefatura de su propio departamento.
+    case CONFIDENTIALITY.MANAGERS:
+      return (
+        doc.departmentId !== null &&
+        doc.departmentId === userDepartmentId &&
+        isManagerRole(role)
+      )
     // Ejecutivo/confidencial: reservado a los roles corporativos (ya retornaron true arriba).
     default:
       return false

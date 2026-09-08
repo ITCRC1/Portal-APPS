@@ -51,6 +51,7 @@ export const es = {
   confidentiality: {
     "public-internal": "Interno público",
     department: "Solo del departamento",
+    managers: "Solo gerencia del departamento",
     executive: "Solo ejecutivos",
     confidential: "Confidencial",
     "highly-confidential": "Altamente confidencial",
@@ -329,7 +330,7 @@ export const es = {
     visibility: "Quién puede verlo",
     upload: "Subir documento",
     existingTitle: "Documentos ({n})",
-    manageHint: "Descarga para revisar, desactiva para ocultar sin borrar, o elimina definitivamente.",
+    manageHint: "Cambiá propiedad, departamento o visibilidad y pulsá Guardar en esa fila. También podés descargar, ocultar o eliminar.",
     empty: "No hay documentos todavía.",
     colName: "Nombre",
     colVisibility: "Visibilidad",
