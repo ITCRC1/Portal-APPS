@@ -193,6 +193,30 @@ async function main() {
       icon: '🏨',
       order: 7,
     },
+    {
+      // Planificación financiera específica de Amarena.
+      name: 'FinPlan Amarena',
+      url: 'https://finplan-amarena.up.railway.app/',
+      description: 'Planificación financiera, flujo de caja y forecast de Amarena.',
+      icon: '📈',
+      order: 8,
+    },
+    {
+      // Planificación financiera específica de Oxygen Jungle Villas.
+      name: 'FinPlan Oxygen',
+      url: 'https://finplanoxygen.up.railway.app/',
+      description: 'Planificación financiera, flujo de caja y forecast de Oxygen Jungle Villas.',
+      icon: '📈',
+      order: 9,
+    },
+    {
+      // Planificación financiera específica de Ojochal Gardens.
+      name: 'FinPlan Gardens',
+      url: 'https://finplan-gardens.up.railway.app/',
+      description: 'Planificación financiera, flujo de caja y forecast de Ojochal Gardens.',
+      icon: '📈',
+      order: 10,
+    },
   ]
 
   for (const link of links) {
