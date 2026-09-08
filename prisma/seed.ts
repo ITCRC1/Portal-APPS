@@ -136,7 +136,16 @@ async function main() {
     console.log('Usuario admin creado:', admin.email)
   }
 
-  const links = [
+  // Los enlaces con `propertySlug` se acotan a esa propiedad (solo los ve su
+  // personal + los roles corporativos). Sin `propertySlug` = corporativo (todos).
+  const links: {
+    name: string
+    url: string
+    description: string
+    icon: string
+    order: number
+    propertySlug?: string
+  }[] = [
     {
       name: 'Tickets',
       url: 'https://tickets.thecostaricacollection.com/',
@@ -182,8 +191,9 @@ async function main() {
       name: 'FinPlan CWL',
       url: 'https://finplan-cwl.up.railway.app/',
       description: 'Planificación financiera, flujo de caja y forecast de Corcovado Wilderness Lodge.',
-      icon: '📈',
+      icon: '🌴',
       order: 6,
+      propertySlug: 'corcovado-wilderness-lodge',
     },
     {
       // Operación diaria (reservas, tours, logística) de Corcovado Wilderness Lodge.
@@ -192,45 +202,54 @@ async function main() {
       description: 'Reservas, tours, logística y operación diaria de Corcovado Wilderness Lodge.',
       icon: '🏨',
       order: 7,
+      propertySlug: 'corcovado-wilderness-lodge',
     },
     {
       // Planificación financiera específica de Amarena.
       name: 'FinPlan Amarena',
       url: 'https://finplan-amarena.up.railway.app/',
       description: 'Planificación financiera, flujo de caja y forecast de Amarena.',
-      icon: '📈',
+      icon: '🌊',
       order: 8,
+      propertySlug: 'amarena',
     },
     {
       // Planificación financiera específica de Oxygen Jungle Villas.
       name: 'FinPlan Oxygen',
       url: 'https://finplanoxygen.up.railway.app/',
       description: 'Planificación financiera, flujo de caja y forecast de Oxygen Jungle Villas.',
-      icon: '📈',
+      icon: '🌿',
       order: 9,
+      propertySlug: 'oxygen-jungle-villas',
     },
     {
       // Planificación financiera específica de Ojochal Gardens.
       name: 'FinPlan Gardens',
       url: 'https://finplan-gardens.up.railway.app/',
       description: 'Planificación financiera, flujo de caja y forecast de Ojochal Gardens.',
-      icon: '📈',
+      icon: '🏡',
       order: 10,
+      propertySlug: 'ojochal-gardens',
     },
   ]
 
-  for (const link of links) {
+  // Mapa slug -> id de propiedad, para acotar los enlaces específicos de cada una.
+  const propertyRows = await prisma.property.findMany({ select: { id: true, slug: true } })
+  const propertyIdBySlug = Object.fromEntries(propertyRows.map((p) => [p.slug, p.id]))
+
+  for (const { propertySlug, ...link } of links) {
+    // propertyId null = enlace corporativo (visible en todas las propiedades).
+    const propertyId = propertySlug ? propertyIdBySlug[propertySlug] ?? null : null
+    const data = { ...link, propertyId }
+
     const existing = await prisma.systemLink.findFirst({
       where: { url: link.url },
     })
 
     if (existing) {
-      await prisma.systemLink.update({
-        where: { id: existing.id },
-        data: link,
-      })
+      await prisma.systemLink.update({ where: { id: existing.id }, data })
     } else {
-      await prisma.systemLink.create({ data: link })
+      await prisma.systemLink.create({ data })
     }
   }
 
