@@ -16,11 +16,17 @@ export async function GET(req: Request) {
   const url = new URL(req.url)
   const next = safeNext(url.searchParams.get("next"))
 
+  // Detrás del proxy de Railway, req.url trae el host interno (localhost:8080); el
+  // origen público sale de los encabezados que pone el proxy.
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? url.host
+  const proto = req.headers.get("x-forwarded-proto") ?? url.protocol.replace(":", "")
+  const origin = `${proto.split(",")[0].trim()}://${host.split(",")[0].trim()}`
+
   const session = await auth()
   const id = (session?.user as { id?: string } | undefined)?.id
 
   const gotoLogin = () => {
-    const login = new URL("/login", url.origin)
+    const login = new URL("/login", origin)
     if (next) login.searchParams.set("next", next)
     return NextResponse.redirect(login)
   }
@@ -33,7 +39,7 @@ export async function GET(req: Request) {
   })
   if (!dbUser || !dbUser.isActive) return gotoLogin()
 
-  const res = NextResponse.redirect(next ?? new URL("/dashboard", url.origin))
+  const res = NextResponse.redirect(next ?? new URL("/dashboard", origin))
   res.cookies.set(
     SSO_COOKIE,
     signSsoToken({ sub: id, email: dbUser.email, role: dbUser.role }),
