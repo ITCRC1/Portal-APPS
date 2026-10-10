@@ -19,6 +19,10 @@ export function safeNext(next: string | null | undefined): string | null {
     if (host === ROOT_DOMAIN || host.endsWith("." + ROOT_DOMAIN)) {
       return u.toString()
     }
+    // En desarrollo local las demás apps corren en localhost:<puerto>.
+    if (process.env.NODE_ENV !== "production" && host === "localhost") {
+      return u.toString()
+    }
     return null
   } catch {
     return null
