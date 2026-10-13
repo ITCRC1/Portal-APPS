@@ -235,6 +235,14 @@ async function main() {
       order: 10,
       propertySlug: 'ojochal-gardens',
     },
+    {
+      // Viajes de ventas: adelantos, expense reports por foto, eventos y liquidación (corporativo).
+      name: 'Business Travel Management (BTM)',
+      url: 'https://btm-tcrc.up.railway.app/',
+      description: 'Adelantos, expense reports por foto, eventos de ventas y liquidación de viajes.',
+      icon: '✈️',
+      order: 11,
+    },
   ]
 
   // Mapa slug -> id de propiedad, para acotar los enlaces específicos de cada una.
